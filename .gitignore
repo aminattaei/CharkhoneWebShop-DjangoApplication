@@ -160,6 +160,10 @@ dmypy.json
 
 # pytype static type analyzer
 .pytype/
+.venv
+
+# ignore database files
+postgres/data/*
 
 # Cython debug symbols
 cython_debug/
@@ -264,3 +268,6 @@ poetry.toml
 pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/django,python
+
+# Ignore database data
+postgres/data/*
