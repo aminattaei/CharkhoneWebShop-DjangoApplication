@@ -36,7 +36,7 @@
     <div class="container">
       <nav class="js-mega-menu navbar-nav-wrap">
         <!-- Default Logo -->
-        <a class="navbar-brand" href="/index.html" aria-label="Front">
+        <a class="navbar-brand" href="{% url 'website:home_page' %}" aria-label="Front">
           <img class="navbar-brand-logo" src="{% static 'svg/logos/logo.svg' %}" alt="Logo">
         </a>
         <!-- End Default Logo -->
@@ -57,7 +57,7 @@
         <div class="collapse navbar-collapse" id="navbarNavDropdown">
           <ul class="navbar-nav">
             <li class="nav-item">
-              <a class="nav-link active" href="/index.html">صفحه اصلی</a>
+              <a class="nav-link active" href="{% url 'website:home_page' %}">صفحه اصلی</a>
             </li>
 
             <!-- Dropdown -->
@@ -119,7 +119,7 @@
                     <div class="flex-grow-1 p-4">
                       <span class="h4 d-block text-primary">برنده تی شرت</span>
                       <p>یکی از تی شرت های برند Front ما را برنده شوید.</p>
-                      <a class="btn btn-sm btn-soft-primary btn-transition" href="/index.html">بیشتر بدانید <i
+                      <a class="btn btn-sm btn-soft-primary btn-transition" href="{% url 'website:home_page' %}">بیشتر بدانید <i
                           class="bi-chevron-left small"></i></a>
                     </div>
                   </div>
@@ -170,7 +170,7 @@
         <div class="col-lg-3 mb-5">
           <div class="d-flex align-items-start flex-column h-100">
             <!-- Logo -->
-            <a class="w-100 mb-3 mb-lg-auto" href="/index.html" aria-label="Front">
+            <a class="w-100 mb-3 mb-lg-auto" href="{% url 'website:home_page' %}" aria-label="Front">
               <img class="brand" src="{% static 'svg/logos/logo.svg' %}" alt="Logo">
             </a>
             <!-- End Logo -->
