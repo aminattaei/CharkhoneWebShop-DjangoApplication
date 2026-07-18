@@ -16,6 +16,10 @@ Charkhone Online Shop - A Django e-commerce project with Docker
 
 ---
 
+## Database Schema
+<img src="./docs/db-diagram.png" style="width=700px;height=700px">
+
+
 ## About
 
 CharkhoneApplication is an online shop built with Django. The project uses Docker Compose to manage services including PostgreSQL, Django, and smtp4dev for email testing.
@@ -24,11 +28,11 @@ CharkhoneApplication is an online shop built with Django. The project uses Docke
 
 ## Services
 
-| Service | Version | Ports | Description |
-|---------|---------|-------|-------------|
-| **PostgreSQL** | 15-alpine | 5432 | Primary database |
-| **Django** | 5.2.16 | 8000 | Web application |
-| **smtp4dev** | v3 | 25 (SMTP), 5000 (Web UI) | Development email server |
+| Service        | Version   | Ports                    | Description              |
+| -------------- | --------- | ------------------------ | ------------------------ |
+| **PostgreSQL** | 15-alpine | 5432                     | Primary database         |
+| **Django**     | 5.2.16    | 8000                     | Web application          |
+| **smtp4dev**   | v3        | 25 (SMTP), 5000 (Web UI) | Development email server |
 
 ---
 
@@ -80,11 +84,11 @@ docker-compose up --build
 
 ### 4. Access the services
 
-| Service | URL |
-|---------|-----|
-| Django | http://localhost:8000 |
+| Service      | URL                         |
+| ------------ | --------------------------- |
+| Django       | http://localhost:8000       |
 | Django Admin | http://localhost:8000/admin |
-| smtp4dev | http://localhost:5000 |
+| smtp4dev     | http://localhost:5000       |
 
 ### 5. Create admin user
 
@@ -138,27 +142,27 @@ CharkhoneApplication-django/
 
 ### Django
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DJANGO_SECRET_KEY` | - | Required. Django secret key |
-| `DJANGO_DEBUG` | `False` | Enable debug mode |
+| Variable               | Default               | Description                     |
+| ---------------------- | --------------------- | ------------------------------- |
+| `DJANGO_SECRET_KEY`    | -                     | Required. Django secret key     |
+| `DJANGO_DEBUG`         | `False`               | Enable debug mode               |
 | `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` | Allowed hosts (comma-separated) |
 
 ### PostgreSQL
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `POSTGRES_DB` | `postgres` | Database name |
-| `POSTGRES_USER` | `postgres` | Database user |
-| `POSTGRES_PASSWORD` | `postgres` | Database password |
-| `POSTGRES_HOST` | `db` | Database host (Docker service name) |
-| `POSTGRES_PORT` | `5432` | Database port |
+| Variable            | Default    | Description                         |
+| ------------------- | ---------- | ----------------------------------- |
+| `POSTGRES_DB`       | `postgres` | Database name                       |
+| `POSTGRES_USER`     | `postgres` | Database user                       |
+| `POSTGRES_PASSWORD` | `postgres` | Database password                   |
+| `POSTGRES_HOST`     | `db`       | Database host (Docker service name) |
+| `POSTGRES_PORT`     | `5432`     | Database port                       |
 
 ### Other
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `TIME_ZONE` | `UTC` | Timezone |
+| Variable    | Default | Description |
+| ----------- | ------- | ----------- |
+| `TIME_ZONE` | `UTC`   | Timezone    |
 
 ---
 
@@ -247,26 +251,26 @@ The project includes two Persian fonts:
 
 ## Dependencies
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| django | 5.2.16 | Web framework |
-| psycopg[binary] | 3.1.12 | PostgreSQL adapter |
-| python-decouple | 3.8 | Environment variables |
-| pillow | 10.2.0 | Image processing |
-| django-debug-toolbar | 4.2.0 | Debug toolbar |
-| requests | 2.31.0 | HTTP client |
-| sqlparse | 0.4.4 | SQL parser |
+| Package              | Version | Purpose               |
+| -------------------- | ------- | --------------------- |
+| django               | 5.2.16  | Web framework         |
+| psycopg[binary]      | 3.1.12  | PostgreSQL adapter    |
+| python-decouple      | 3.8     | Environment variables |
+| pillow               | 10.2.0  | Image processing      |
+| django-debug-toolbar | 4.2.0   | Debug toolbar         |
+| requests             | 2.31.0  | HTTP client           |
+| sqlparse             | 0.4.4   | SQL parser            |
 
 ---
 
 ## Available Routes
 
-| Path | Name | Description |
-|------|------|-------------|
-| `/` | `home_page` | Home page |
-| `/about/` | `about_page` | About page |
-| `/contact/` | `contact_page` | Contact page |
-| `/admin/` | - | Django admin panel |
+| Path        | Name           | Description        |
+| ----------- | -------------- | ------------------ |
+| `/`         | `home_page`    | Home page          |
+| `/about/`   | `about_page`   | About page         |
+| `/contact/` | `contact_page` | Contact page       |
+| `/admin/`   | -              | Django admin panel |
 
 ---
 
