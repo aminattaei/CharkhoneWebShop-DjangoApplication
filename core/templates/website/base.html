@@ -24,11 +24,14 @@
   <!-- CSS Front Template -->
   <link rel="stylesheet" href="{% static 'css/theme.min.css' %}">
 
+  <!-- Toastify links-->
+  <link rel="stylesheet" href="{% static 'vendor/src/toastify.css' %}">
+
+
   {% block extra_css %} {% endblock extra_css %}
 
   {% block extra_css_no_compress %} {% endblock extra_css_no_compress %}
 </head>
-
 
 <body>
   <!-- ========== HEADER ========== -->
@@ -119,8 +122,8 @@
                     <div class="flex-grow-1 p-4">
                       <span class="h4 d-block text-primary">برنده تی شرت</span>
                       <p>یکی از تی شرت های برند Front ما را برنده شوید.</p>
-                      <a class="btn btn-sm btn-soft-primary btn-transition" href="{% url 'website:home_page' %}">بیشتر بدانید <i
-                          class="bi-chevron-left small"></i></a>
+                      <a class="btn btn-sm btn-soft-primary btn-transition" href="{% url 'website:home_page' %}">بیشتر
+                        بدانید <i class="bi-chevron-left small"></i></a>
                     </div>
                   </div>
                 </div>
@@ -146,7 +149,21 @@
               </button>
               <!-- End Shopping Cart -->
 
-              <a class="btn btn-primary btn-transition" href="./page-login-simple.html">ورود</a>
+
+              {% if not request.user.is_authenticated %}
+
+              <a class="btn btn-primary btn-transition" href="{% url 'accounts:login' %}">ورود</a>
+              {% else %}
+              <form method="post" action="{% url 'accounts:logout' %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">خروج</button>
+              </form>`
+              {% endif %}
+
+
+
+
+
             </li>
           </ul>
         </div>
@@ -161,7 +178,6 @@
   <main id="content" role="main">
     {% block content %} {% endblock content %}
   </main>
-
 
   <!-- ========== FOOTER ========== -->
   <footer class="border-top">
@@ -470,6 +486,29 @@
 
   <!-- JS Front -->
   <script src="{% static 'js/theme.min.js' %}"></script>
+
+  <!-- Toastify script (must load BEFORE the messages script below) -->
+  <script src="{% static 'vendor/src/toastify.js' %}"></script>
+
+  <!-- Render Django messages as Toastify toasts (runs AFTER toastify-js is loaded) -->
+  {% if messages %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      {% for message in messages %}
+      Toastify({
+        text: "{{ message|escapejs }}",
+        duration: 3000,
+        gravity: "top",
+        position: "right",
+        stopOnFocus: true,
+        style: {
+          background: "{% if 'error' in message.tags %}#e74c3c{% elif 'success' in message.tags %}#2ecc71{% elif 'warning' in message.tags %}#f39c12{% else %}#3498db{% endif %}",
+        },
+      }).showToast();
+      {% endfor %}
+    });
+  </script>
+  {% endif %}
 
   <!-- JS Plugins Init. -->
   <script>

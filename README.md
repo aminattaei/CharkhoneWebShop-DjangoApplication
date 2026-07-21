@@ -5,11 +5,13 @@ Charkhone Online Shop - A Django e-commerce project with Docker
 ## Table of Contents
 
 - [About](#about)
+- [Database Schema](#Database-Schema)
 - [Services](#services)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Project Structure](#project-structure)
 - [Environment Variables](#environment-variables)
+- [Features](#features)
 - [Useful Commands](#useful-commands)
 - [Development](#development)
 - [Troubleshooting](#troubleshooting)
@@ -113,6 +115,19 @@ CharkhoneApplication-django/
 │   │   ├── settings.py
 │   │   ├── urls.py
 │   │   └── wsgi.py
+│   ├── accounts/                  # Authentication app
+│   │   ├── models.py              # User, PasswordResetToken, Profile
+│   │   ├── views.py               # LoginView, RequestPasswordReset, ResetPassword
+│   │   ├── urls.py                # Account URL patterns
+│   │   ├── forms.py               # Custom AuthenticationForm
+│   │   ├── serializers.py         # DRF serializers
+│   │   ├── utils.py               # JWT token utilities
+│   │   ├── admin.py               # Custom admin configuration
+│   │   ├── management/
+│   │   │   └── commands/
+│   │   │       └── cleanup_expired_tokens.py
+│   │   └── tests/
+│   │       └── test_model.py      # User and password reset tests
 │   ├── website/                   # Main app
 │   │   ├── views.py
 │   │   ├── urls.py
@@ -166,6 +181,119 @@ CharkhoneApplication-django/
 
 ---
 
+## Features
+
+### Password Reset (JWT-based)
+
+A complete password reset flow using JWT tokens with 48-hour expiry.
+
+#### How it works
+
+1. **Request reset** - User sends their email to `/accounts/request-reset/`
+2. **Email sent** - A JWT token is generated and sent via email (viewable in smtp4dev at http://localhost:5000)
+3. **Reset password** - User clicks the link and submits a new password with the token to `/accounts/reset-password/`
+
+#### API Endpoints
+
+| Endpoint                  | Method | Description                        |
+| ------------------------- | ------ | ---------------------------------- |
+| `/accounts/request-reset/` | POST   | Send reset email                   |
+| `/accounts/reset-password/`| POST   | Reset password with token          |
+
+#### Request Reset
+
+```bash
+curl -X POST http://localhost:8000/accounts/request-reset/ \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com"}'
+```
+
+Response:
+```json
+{"message": "در صورت وجود ایمیل، لینک بازیابی ارسال شد."}
+```
+
+#### Reset Password
+
+```bash
+curl -X POST http://localhost:8000/accounts/reset-password/ \
+  -H "Content-Type: application/json" \
+  -d '{"token": "<jwt-token>", "new_password": "NewP@ssw0rd123"}'
+```
+
+Response:
+```json
+{"message": "رمز عبور با موفقیت تغییر یافت."}
+```
+
+#### Security Features
+
+- **JWT Token** - Tokens are signed with Django's `SECRET_KEY` using HS256 algorithm
+- **48-hour expiry** - Tokens expire after 48 hours
+- **One-time use** - Tokens are marked as used after successful password reset
+- **Rate limiting** - 3 requests per hour via `ScopedRateThrottle`
+- **Password validation** - Uses Django's built-in password validators
+- **No email enumeration** - Same response regardless of whether the email exists
+- **Token cleanup** - Expired tokens are cleaned up on user login
+
+#### Token Cleanup
+
+```bash
+# Manual cleanup of expired tokens
+docker exec -it charkhoneh-backend python manage.py cleanup_expired_tokens
+```
+
+#### Testing
+
+```bash
+# Run all tests including password reset tests
+docker exec -it charkhoneh-backend python manage.py test accounts
+```
+
+---
+
+### Django Debug Toolbar
+
+Debug toolbar is integrated for development debugging and performance analysis.
+
+#### Access
+
+When `DJANGO_DEBUG=True`, the debug toolbar appears on the right side of every page at http://localhost:8000.
+
+#### Features
+
+- **SQL Panel** - View all database queries with timing
+- **Request/Response** - Inspect headers, cookies, session data
+- **Templates** - View template rendering times
+- **Static Files** - Check static file serving
+- **Cache** - Monitor cache usage
+- **Settings** - View all Django settings
+- **Logging** - View log messages
+
+#### Configuration
+
+Debug toolbar is configured in `settings.py`:
+
+```python
+# Only active when DEBUG=True
+INSTALLED_APPS = [
+    ...
+    'debug_toolbar',
+]
+
+MIDDLEWARE = [
+    ...
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
+]
+
+# Auto-detects IP for Docker environments
+INTERNAL_IPS = [ip, '127.0.0.1', '10.0.2.2']
+```
+
+> **Note:** Debug toolbar is only visible when `DJANGO_DEBUG=True`. Never enable debug mode in production.
+
+---
+
 ## Useful Commands
 
 ### Docker
@@ -193,6 +321,12 @@ docker exec -it charkhoneh-backend python manage.py migrate
 
 # Collect static files
 docker exec -it charkhoneh-backend python manage.py collectstatic
+
+# Cleanup expired password reset tokens
+docker exec -it charkhoneh-backend python manage.py cleanup_expired_tokens
+
+# Run tests
+docker exec -it charkhoneh-backend python manage.py test accounts
 
 # Django shell
 docker exec -it charkhoneh-backend python manage.py shell
@@ -251,26 +385,32 @@ The project includes two Persian fonts:
 
 ## Dependencies
 
-| Package              | Version | Purpose               |
-| -------------------- | ------- | --------------------- |
-| django               | 5.2.16  | Web framework         |
-| psycopg[binary]      | 3.1.12  | PostgreSQL adapter    |
-| python-decouple      | 3.8     | Environment variables |
-| pillow               | 10.2.0  | Image processing      |
-| django-debug-toolbar | 4.2.0   | Debug toolbar         |
-| requests             | 2.31.0  | HTTP client           |
-| sqlparse             | 0.4.4   | SQL parser            |
+| Package                         | Version | Purpose                    |
+| ------------------------------- | ------- | -------------------------- |
+| django                          | 5.2.16  | Web framework              |
+| psycopg[binary]                 | 3.1.12  | PostgreSQL adapter         |
+| python-decouple                 | 3.8     | Environment variables      |
+| pillow                          | 10.2.0  | Image processing           |
+| django-debug-toolbar            | 4.2.0   | Debug toolbar              |
+| django-rest-framework           | -       | REST API framework         |
+| djangorestframework-simplejwt   | -       | JWT authentication         |
+| requests                        | 2.31.0  | HTTP client                |
+| sqlparse                        | 0.4.4   | SQL parser                 |
 
 ---
 
 ## Available Routes
 
-| Path        | Name           | Description        |
-| ----------- | -------------- | ------------------ |
-| `/`         | `home_page`    | Home page          |
-| `/about/`   | `about_page`   | About page         |
-| `/contact/` | `contact_page` | Contact page       |
-| `/admin/`   | -              | Django admin panel |
+| Path                         | Method | Name             | Description                    |
+| ---------------------------- | ------ | ---------------- | ------------------------------ |
+| `/`                          | GET    | `home_page`      | Home page                      |
+| `/about/`                    | GET    | `about_page`     | About page                     |
+| `/contact/`                  | GET    | `contact_page`   | Contact page                   |
+| `/admin/`                    | GET    | -                | Django admin panel             |
+| `/accounts/login/`           | GET    | `login`          | Login page                     |
+| `/accounts/logout/`          | GET    | `logout`         | Logout                         |
+| `/accounts/request-reset/`   | POST   | `request-reset`  | Request password reset email   |
+| `/accounts/reset-password/`  | POST   | `reset-password` | Reset password with token      |
 
 ---
 

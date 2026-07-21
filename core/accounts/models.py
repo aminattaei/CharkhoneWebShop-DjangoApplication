@@ -4,6 +4,7 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
+from django.utils import timezone
 from django.core.validators import RegexValidator
 
 
@@ -69,29 +70,40 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.CharField(max_length=255, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+
+    def is_valid(self):
+        return not self.is_used and timezone.now() < self.expires_at
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     first_name = models.CharField(max_length=255, blank=True, null=True)
     last_name = models.CharField(max_length=255, blank=True, null=True)
-
     phone_number = models.CharField(
-    max_length=12,
-    validators=[
-        RegexValidator(
-            regex=r'^(09[0-9]{9}|989[0-9]{9})$',
-            message='Enter a valid Iranian mobile number (e.g., 09123456789 or 989123456789).'
-        )
-    ])
-
+        max_length=12,
+        blank=True,
+        null=True,
+        validators=[
+            RegexValidator(
+                regex=r'^(09[0-9]{9}|989[0-9]{9})$',
+                message='Enter a valid Iranian mobile number (e.g., 09123456789 or 989123456789).'
+            )
+        ]
+    )
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.user.email
+        full_name = f"{self.first_name} {self.last_name}".strip()
+        return full_name or self.user.email
 
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created and instance.type == UserType.customer.value:
-        Profile.objects.create(user=instance,pk = instance.pk)   
+        Profile.objects.create(user=instance)
