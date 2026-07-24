@@ -10,6 +10,7 @@ Charkhone Online Shop - A Django e-commerce project with Docker
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Project Structure](#project-structure)
+- [Password Reset](#Password-Reset)
 - [Environment Variables](#environment-variables)
 - [Features](#features)
 - [Useful Commands](#useful-commands)
@@ -153,6 +154,8 @@ CharkhoneApplication-django/
 
 ---
 
+
+
 ## Environment Variables
 
 ### Django
@@ -183,9 +186,14 @@ CharkhoneApplication-django/
 
 ## Features
 
-### Password Reset (JWT-based)
+### Password Reset
 
 A complete password reset flow using JWT tokens with 48-hour expiry.
+
+
+<img src="./docs/Reset_Password_Flow.png">
+
+---
 
 #### How it works
 
@@ -195,10 +203,10 @@ A complete password reset flow using JWT tokens with 48-hour expiry.
 
 #### API Endpoints
 
-| Endpoint                  | Method | Description                        |
-| ------------------------- | ------ | ---------------------------------- |
-| `/accounts/request-reset/` | POST   | Send reset email                   |
-| `/accounts/reset-password/`| POST   | Reset password with token          |
+| Endpoint                    | Method | Description               |
+| --------------------------- | ------ | ------------------------- |
+| `/accounts/request-reset/`  | POST   | Send reset email          |
+| `/accounts/reset-password/` | POST   | Reset password with token |
 
 #### Request Reset
 
@@ -385,32 +393,32 @@ The project includes two Persian fonts:
 
 ## Dependencies
 
-| Package                         | Version | Purpose                    |
-| ------------------------------- | ------- | -------------------------- |
-| django                          | 5.2.16  | Web framework              |
-| psycopg[binary]                 | 3.1.12  | PostgreSQL adapter         |
-| python-decouple                 | 3.8     | Environment variables      |
-| pillow                          | 10.2.0  | Image processing           |
-| django-debug-toolbar            | 4.2.0   | Debug toolbar              |
-| django-rest-framework           | -       | REST API framework         |
-| djangorestframework-simplejwt   | -       | JWT authentication         |
-| requests                        | 2.31.0  | HTTP client                |
-| sqlparse                        | 0.4.4   | SQL parser                 |
+| Package                       | Version | Purpose               |
+| ----------------------------- | ------- | --------------------- |
+| django                        | 5.2.16  | Web framework         |
+| psycopg[binary]               | 3.1.12  | PostgreSQL adapter    |
+| python-decouple               | 3.8     | Environment variables |
+| pillow                        | 10.2.0  | Image processing      |
+| django-debug-toolbar          | 4.2.0   | Debug toolbar         |
+| django-rest-framework         | -       | REST API framework    |
+| djangorestframework-simplejwt | -       | JWT authentication    |
+| requests                      | 2.31.0  | HTTP client           |
+| sqlparse                      | 0.4.4   | SQL parser            |
 
 ---
 
 ## Available Routes
 
-| Path                         | Method | Name             | Description                    |
-| ---------------------------- | ------ | ---------------- | ------------------------------ |
-| `/`                          | GET    | `home_page`      | Home page                      |
-| `/about/`                    | GET    | `about_page`     | About page                     |
-| `/contact/`                  | GET    | `contact_page`   | Contact page                   |
-| `/admin/`                    | GET    | -                | Django admin panel             |
-| `/accounts/login/`           | GET    | `login`          | Login page                     |
-| `/accounts/logout/`          | GET    | `logout`         | Logout                         |
-| `/accounts/request-reset/`   | POST   | `request-reset`  | Request password reset email   |
-| `/accounts/reset-password/`  | POST   | `reset-password` | Reset password with token      |
+| Path                        | Method | Name             | Description                  |
+| --------------------------- | ------ | ---------------- | ---------------------------- |
+| `/`                         | GET    | `home_page`      | Home page                    |
+| `/about/`                   | GET    | `about_page`     | About page                   |
+| `/contact/`                 | GET    | `contact_page`   | Contact page                 |
+| `/admin/`                   | GET    | -                | Django admin panel           |
+| `/accounts/login/`          | GET    | `login`          | Login page                   |
+| `/accounts/logout/`         | GET    | `logout`         | Logout                       |
+| `/accounts/request-reset/`  | POST   | `request-reset`  | Request password reset email |
+| `/accounts/reset-password/` | POST   | `reset-password` | Reset password with token    |
 
 ---
 

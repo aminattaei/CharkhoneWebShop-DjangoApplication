@@ -1,14 +1,12 @@
+import hashlib
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
-from django.utils import timezone
 from django.core.validators import RegexValidator
-
-
-# Create your models here.
+from django.utils import timezone
 
 
 class UserType(models.IntegerChoices):
@@ -54,10 +52,13 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_("email address"), unique=True)
-    type =  models.IntegerField(_("user_type"),choices=UserType.choices,default=UserType.customer.value)
+    type = models.IntegerField(_("user_type"), choices=UserType.choices, default=UserType.customer.value)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_verified = models.BooleanField(default=False)
+    is_locked = models.BooleanField(default=False)
+    failed_reset_attempts = models.PositiveIntegerField(default=0)
+    last_reset_attempt = models.DateTimeField(null=True, blank=True)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 
@@ -69,16 +70,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
-
-class PasswordResetToken(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    token = models.CharField(max_length=255, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField()
-    is_used = models.BooleanField(default=False)
-
-    def is_valid(self):
-        return not self.is_used and timezone.now() < self.expires_at
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
@@ -103,7 +94,32 @@ class Profile(models.Model):
         return full_name or self.user.email
 
 
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token_hash = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+
+    def is_valid(self):
+        return not self.is_used and timezone.now() < self.expires_at
+
+    @classmethod
+    def create_token(cls, user, raw_token):
+        token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
+        expires_at = timezone.now() + timezone.timedelta(hours=48)
+        cls.objects.filter(user=user, is_used=False).update(is_used=True)
+        return cls.objects.create(
+            user=user,
+            token_hash=token_hash,
+            expires_at=expires_at,
+        )
+
+    def __str__(self):
+        return f"ResetToken for {self.user.email}"
+
+
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created and instance.type == UserType.customer.value:
-        Profile.objects.create(user=instance)
+        Profile.objects.get_or_create(user=instance)
