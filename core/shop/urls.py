@@ -3,7 +3,9 @@ URL configuration for shop project.
 """
 
 from django.urls import path
-
+from .views import ProductListView
 app_name = "shop"
 
-urlpatterns = []
+urlpatterns = [
+    path('', ProductListView.as_view(), name='product_list'),
+]

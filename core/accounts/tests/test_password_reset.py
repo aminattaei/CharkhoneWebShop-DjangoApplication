@@ -18,10 +18,10 @@ class RequestPasswordResetTests(TestCase):
             email='test@example.com', password='testpass123'
         )
 
-    @patch('accounts.views.send_reset_email')
+    @patch('accounts.api.v1.views.send_reset_email')
     def test_request_reset_with_existing_email(self, mock_send_email):
         response = self.client.post(
-            '/accounts/api/request-reset/',
+            '/accounts/api/v1/request-reset/',
             {'email': 'test@example.com'},
             format='json',
         )
@@ -31,7 +31,7 @@ class RequestPasswordResetTests(TestCase):
 
     def test_request_reset_with_nonexistent_email(self):
         response = self.client.post(
-            '/accounts/api/request-reset/',
+            '/accounts/api/v1/request-reset/',
             {'email': 'nonexistent@example.com'},
             format='json',
         )
@@ -47,18 +47,18 @@ class ResetPasswordTests(TestCase):
 
     def test_reset_with_invalid_token(self):
         response = self.client.post(
-            '/accounts/api/reset-password/',
+            '/accounts/api/v1/reset-password/',
             {'token': 'invalid-token', 'new_password': 'newpass123'},
             format='json',
         )
         self.assertEqual(response.status_code, 400)
         self.assertIn('نامعتبر', response.data['detail'])
 
-    @patch('accounts.views.verify_reset_token')
+    @patch('accounts.api.v1.views.verify_reset_token')
     def test_reset_with_valid_token(self, mock_verify):
         mock_verify.return_value = self.user.id
         response = self.client.post(
-            '/accounts/api/reset-password/',
+            '/accounts/api/v1/reset-password/',
             {'token': 'valid-token', 'new_password': 'newpass1234'},
             format='json',
         )
@@ -66,13 +66,13 @@ class ResetPasswordTests(TestCase):
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('newpass1234'))
 
-    @patch('accounts.views.verify_reset_token')
+    @patch('accounts.api.v1.views.verify_reset_token')
     def test_reset_with_locked_account(self, mock_verify):
         mock_verify.return_value = self.user.id
         self.user.is_locked = True
         self.user.save()
         response = self.client.post(
-            '/accounts/api/reset-password/',
+            '/accounts/api/v1/reset-password/',
             {'token': 'valid-token', 'new_password': 'newpass1234'},
             format='json',
         )
