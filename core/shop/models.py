@@ -7,8 +7,8 @@ User = get_user_model()
 
 
 class ProductStatusType(models.IntegerChoices):
-    publish = 1, _("publish")
-    draft = 2, _("draft")
+    publish = 1, _("نمایش")
+    draft = 2, _("عدم نمایش")
 
 
 
@@ -50,7 +50,7 @@ class ProductModel(models.Model):
         choices=ProductStatusType.choices,
         default=ProductStatusType.publish,
     )
-    price = models.DecimalField(max_digits=15, decimal_places=0, default=0)
+    price = models.DecimalField(max_digits=15, decimal_places=0, default=0) # type: ignore
     discount_percent = models.PositiveSmallIntegerField(
         default=0,
         validators=[MinValueValidator(0), MaxValueValidator(100)],
