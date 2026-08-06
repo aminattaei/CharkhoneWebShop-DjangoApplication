@@ -19,8 +19,8 @@ class ProductCategory(models.Model):
     updated_date = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = _("دسته‌بندی محصول")
-        verbose_name_plural = _("دسته‌بندی‌های محصول")
+        verbose_name ="Category"
+        verbose_name_plural = "Categories"
 
     def __str__(self):
         return self.title
@@ -59,8 +59,8 @@ class ProductModel(models.Model):
     updated_date = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = _("محصول")
-        verbose_name_plural = _("محصولات")
+        verbose_name = "Product"
+        verbose_name_plural = "Products"
         ordering = ["-created_date"]
 
     def __str__(self):
@@ -88,8 +88,8 @@ class ProductImageModel(models.Model):
     updated_date = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = _("تصویر محصول")
-        verbose_name_plural = _("تصاویر محصول")
+        verbose_name = "Image"
+        verbose_name_plural = "Images"
 
     def __str__(self):
         return f"{self.product.title} - {self.pk}"

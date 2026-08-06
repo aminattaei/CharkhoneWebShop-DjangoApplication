@@ -1,9 +1,14 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import  Profile
+from .models import  Profile,PasswordResetToken
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
+
+# Admin panel configuration
+admin.site.site_title = "Charkhoneh site admin (DEV)"
+admin.site.site_header = "Charkhoneh administration"
+admin.site.index_title = "Charkhoneh Site administration"
 
 
 class CustomUserAdmin(UserAdmin):
@@ -72,3 +77,4 @@ class CustomUserProfile(admin.ModelAdmin):
 
 admin.site.register(Profile,CustomUserProfile)
 admin.site.register(User, CustomUserAdmin)
+admin.site.register(PasswordResetToken)
