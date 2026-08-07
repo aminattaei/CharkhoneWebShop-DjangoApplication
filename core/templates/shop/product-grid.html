@@ -473,7 +473,7 @@
               </div>
 
               <h4 class="card-title">
-                <a class="text-dark" href="#">{{ product.title }}</a>
+                <a class="text-dark" href="{% url 'shop:product_detail' pk=product.pk %}">{{ product.title }}</a>
               </h4>
               <p class="card-text text-dark">
                 {{ product.final_price|floatformat:0 }} تومان

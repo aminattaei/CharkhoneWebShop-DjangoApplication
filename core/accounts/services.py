@@ -15,7 +15,7 @@ signer = TimestampSigner()
 
 
 def generate_reset_token(user):
-    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     raw_token = f"reset:{user.id}:{timestamp}"
     signed_token = signer.sign(raw_token)
     PasswordResetToken.create_token(user, raw_token)
@@ -53,18 +53,18 @@ def mark_token_used(token):
 
 
 def send_reset_email(user, token, request):
-    protocol = 'https' if request.is_secure() else 'http'
+    protocol = "https" if request.is_secure() else "http"
     domain = request.get_host()
     reset_link = f"{protocol}://{domain}/accounts/reset-password/?token={token}"
     email = user.email
     try:
         send_mail(
-            subject='بازیابی رمز عبور',
+            subject="بازیابی رمز عبور",
             message=(
-                f'سلام {user.profile.first_name or user.email},\n\n'
-                f'برای بازیابی رمز عبور خود روی لینک زیر کلیک کنید:\n\n'
-                f'{reset_link}\n\n'
-                f'اگر شما درخواست بازیابی رمز نداده‌اید، این ایمیل را نادیده بگیرید.'
+                f"سلام {user.profile.first_name or user.email},\n\n"
+                f"برای بازیابی رمز عبور خود روی لینک زیر کلیک کنید:\n\n"
+                f"{reset_link}\n\n"
+                f"اگر شما درخواست بازیابی رمز نداده‌اید، این ایمیل را نادیده بگیرید."
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[email],

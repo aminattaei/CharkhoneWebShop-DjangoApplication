@@ -4,7 +4,12 @@ from django.core.management.base import BaseCommand
 from django.utils.text import slugify
 from django.conf import settings
 from faker import Faker
-from shop.models import ProductModel, ProductCategory, ProductImageModel, ProductStatusType
+from shop.models import (
+    ProductModel,
+    ProductCategory,
+    ProductImageModel,
+    ProductStatusType,
+)
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -52,18 +57,30 @@ class Command(BaseCommand):
             main_images = ["defaults/default_image.png"]
 
         self.stdout.write(
-            self.style.SUCCESS(f"Loaded {len(main_images)} main image(s) and {len(extra_images)} extra image(s)")
+            self.style.SUCCESS(
+                f"Loaded {len(main_images)} main image(s) and {len(extra_images)} extra image(s)"
+            )
         )
 
         # --- Ensure categories exist ---
         categories = list(ProductCategory.objects.all())
         if not categories:
             self.stdout.write(
-                self.style.WARNING("No categories found. Creating default categories...")
+                self.style.WARNING(
+                    "No categories found. Creating default categories..."
+                )
             )
             default_categories = [
-                "Electronics", "Books", "Clothing", "Home & Kitchen",
-                "Sports", "Toys", "Beauty", "Automotive", "Health", "Garden",
+                "Electronics",
+                "Books",
+                "Clothing",
+                "Home & Kitchen",
+                "Sports",
+                "Toys",
+                "Beauty",
+                "Automotive",
+                "Health",
+                "Garden",
             ]
             for cat in default_categories:
                 slug = slugify(cat, allow_unicode=True)
@@ -82,8 +99,9 @@ class Command(BaseCommand):
                 self.style.WARNING("No users found. Creating a default admin user...")
             )
             admin_user = User.objects.create_superuser(
-                username=None, #type: ignore
-                email="admin@example.com", password="admin123"
+                username=None,  # type: ignore
+                email="admin@example.com",
+                password="admin123",
             )
             users.append(admin_user)
             self.stdout.write(self.style.SUCCESS("Created default admin user"))
@@ -99,13 +117,14 @@ class Command(BaseCommand):
                     new_cat_title = fake.word().capitalize()
                     new_slug = slugify(new_cat_title, allow_unicode=True)
                 new_category, created = ProductCategory.objects.get_or_create(
-                    slug=new_slug,
-                    defaults={"title": new_cat_title}
+                    slug=new_slug, defaults={"title": new_cat_title}
                 )
                 if created:
                     categories.append(new_category)
                     self.stdout.write(
-                        self.style.SUCCESS(f"  🆕 Created new category: {new_cat_title}")
+                        self.style.SUCCESS(
+                            f"  🆕 Created new category: {new_cat_title}"
+                        )
                     )
                 else:
                     if new_category not in categories:
@@ -133,7 +152,9 @@ class Command(BaseCommand):
                 description=fake.text(max_nb_chars=500),
                 brief_description=fake.text(max_nb_chars=100),
                 stock=random.randint(0, 100),
-                status=random.choice([ProductStatusType.publish, ProductStatusType.draft]),
+                status=random.choice(
+                    [ProductStatusType.publish, ProductStatusType.draft]
+                ),
                 price=random.randint(10000, 1000000),
                 discount_percent=random.randint(0, 50),
             )
@@ -177,4 +198,4 @@ class Command(BaseCommand):
             self.style.SUCCESS(
                 f"✅ Successfully generated {created_count} product(s) with categories and extra images."
             )
-        )   
+        )

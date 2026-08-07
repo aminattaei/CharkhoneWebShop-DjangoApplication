@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import  Profile,PasswordResetToken
+from .models import Profile, PasswordResetToken
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -13,11 +13,11 @@ admin.site.index_title = "Charkhoneh Site administration"
 
 class CustomUserAdmin(UserAdmin):
     """
-    Custom admin panel for user management with add and change forms plus password
+    Custom admin panel for user management with add and change form and password
     """
 
     model = User
-    list_display = ("pk","email", "is_superuser", "is_active", "is_verified")
+    list_display = ("pk", "email", "is_superuser", "is_active", "is_verified")
     list_filter = ("email", "is_superuser", "is_active", "is_verified")
     searching_fields = ("email",)
     ordering = ("email",)
@@ -42,7 +42,7 @@ class CustomUserAdmin(UserAdmin):
         (
             "group permissions",
             {
-                "fields": ("groups", "user_permissions","type"),
+                "fields": ("groups", "user_permissions", "type"),
             },
         ),
         (
@@ -65,16 +65,18 @@ class CustomUserAdmin(UserAdmin):
                     "is_active",
                     "is_superuser",
                     "is_verified",
-                    "type"
+                    "type",
                 ),
             },
         ),
     )
 
-class CustomUserProfile(admin.ModelAdmin):
-    list_display = ("id","user","first_name","last_name","phone_number")
-    searching_fields = ("user","first_name","last_name","phone_number")
 
-admin.site.register(Profile,CustomUserProfile)
+class CustomUserProfile(admin.ModelAdmin):
+    list_display = ("id", "user", "first_name", "last_name", "phone_number")
+    searching_fields = ("user", "first_name", "last_name", "phone_number")
+
+
+admin.site.register(Profile, CustomUserProfile)
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(PasswordResetToken)

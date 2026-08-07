@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 def send_reset_email_task(self, email, reset_link):
     try:
         send_mail(
-            subject='بازیابی رمز عبور',
-            message=f'برای بازیابی رمز عبور خود روی لینک زیر کلیک کنید:\n\n{reset_link}\n\nاین لینک تا ۴۸ ساعت معتبر است.',
+            subject="بازیابی رمز عبور",
+            message=f"برای بازیابی رمز عبور خود روی لینک زیر کلیک کنید:\n\n{reset_link}\n\nاین لینک تا ۴۸ ساعت معتبر است.",
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[email],
             fail_silently=False,

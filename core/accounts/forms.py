@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 
 class AuthenticationForm(auth_forms.AuthenticationForm):
     def confirm_login_allowed(self, user):
-        super(AuthenticationForm,self).confirm_login_allowed(user)
+        super(AuthenticationForm, self).confirm_login_allowed(user)
 
         # if not user.is_verified:
         #     raise ValidationError("The user isn't verified")

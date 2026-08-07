@@ -5,8 +5,17 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import User
-from accounts.services import generate_reset_token, verify_reset_token, mark_token_used, send_reset_email
-from accounts.throttles import ResetRequestThrottle, ResetAttemptThrottle, EmailBasedThrottle
+from accounts.services import (
+    generate_reset_token,
+    verify_reset_token,
+    mark_token_used,
+    send_reset_email,
+)
+from accounts.throttles import (
+    ResetRequestThrottle,
+    ResetAttemptThrottle,
+    EmailBasedThrottle,
+)
 
 from .serializers import ResetRequestSerializer, ResetPasswordSerializer
 
@@ -20,10 +29,10 @@ class RequestPasswordReset(APIView):
         serializer = ResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        email = serializer.validated_data['email']
+        email = serializer.validated_data["email"]
 
         try:
-            user = User.objects.select_related('profile').get(email=email)
+            user = User.objects.select_related("profile").get(email=email)
             if user.is_locked:
                 logger.warning("تلاش بازیابی رمز برای حساب قفل‌شده: %s", email)
             else:
@@ -46,8 +55,8 @@ class ResetPassword(APIView):
         serializer = ResetPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        token = serializer.validated_data['token']
-        new_password = serializer.validated_data['new_password']
+        token = serializer.validated_data["token"]
+        new_password = serializer.validated_data["new_password"]
 
         user_id = verify_reset_token(token)
         if user_id is None:

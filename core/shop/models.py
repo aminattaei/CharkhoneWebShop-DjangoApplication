@@ -11,7 +11,6 @@ class ProductStatusType(models.IntegerChoices):
     draft = 2, _("عدم نمایش")
 
 
-
 class ProductCategory(models.Model):
     title = models.CharField(max_length=255)
     slug = models.SlugField(allow_unicode=True, unique=True)
@@ -19,7 +18,7 @@ class ProductCategory(models.Model):
     updated_date = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name ="Category"
+        verbose_name = "Category"
         verbose_name_plural = "Categories"
 
     def __str__(self):
@@ -50,7 +49,7 @@ class ProductModel(models.Model):
         choices=ProductStatusType.choices,
         default=ProductStatusType.publish,
     )
-    price = models.DecimalField(max_digits=15, decimal_places=0, default=0) # type: ignore
+    price = models.DecimalField(max_digits=15, decimal_places=0, default=0)  # type: ignore
     discount_percent = models.PositiveSmallIntegerField(
         default=0,
         validators=[MinValueValidator(0), MaxValueValidator(100)],
@@ -93,5 +92,3 @@ class ProductImageModel(models.Model):
 
     def __str__(self):
         return f"{self.product.title} - {self.pk}"
-
-

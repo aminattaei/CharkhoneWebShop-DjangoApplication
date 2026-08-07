@@ -10,9 +10,9 @@ from django.utils import timezone
 
 
 class UserType(models.IntegerChoices):
-    customer = 1 , _("customer")
-    admin = 2 , _("admin")
-    superuser = 3 , _("superuser")
+    customer = 1, _("customer")
+    admin = 2, _("admin")
+    superuser = 3, _("superuser")
 
 
 class UserManager(BaseUserManager):
@@ -52,7 +52,9 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_("email address"), unique=True)
-    type = models.IntegerField(_("user_type"), choices=UserType.choices, default=UserType.customer.value)
+    type = models.IntegerField(
+        _("user_type"), choices=UserType.choices, default=UserType.customer.value
+    )
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_verified = models.BooleanField(default=False)
@@ -72,7 +74,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     first_name = models.CharField(max_length=255, blank=True, null=True)
     last_name = models.CharField(max_length=255, blank=True, null=True)
     phone_number = models.CharField(
@@ -81,10 +83,10 @@ class Profile(models.Model):
         null=True,
         validators=[
             RegexValidator(
-                regex=r'^(09[0-9]{9}|989[0-9]{9})$',
-                message='Enter a valid Iranian mobile number (e.g., 09123456789 or 989123456789).'
+                regex=r"^(09[0-9]{9}|989[0-9]{9})$",
+                message="Enter a valid Iranian mobile number (e.g., 09123456789 or 989123456789).",
             )
-        ]
+        ],
     )
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)

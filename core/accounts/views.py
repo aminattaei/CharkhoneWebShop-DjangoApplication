@@ -46,4 +46,3 @@ class PasswordResetCompleteView(auth_views.PasswordResetCompleteView):
 
 class ResetPasswordPage(TemplateView):
     template_name = "accounts/reset_password_confirm.html"
-
