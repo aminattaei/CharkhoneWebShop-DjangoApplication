@@ -20,7 +20,7 @@ class ProductListView(generic.ListView):
 class ProductDetailView(generic.DetailView):
     model = ProductModel
     context_object_name = "product"
-    template_name = "shop/product-overview.html"
+    template_name = "shop/product-details.html"
 
     def get_queryset(self):
         return ProductModel.objects.prefetch_related("product_images")

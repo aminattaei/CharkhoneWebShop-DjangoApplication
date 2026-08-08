@@ -3,6 +3,8 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MaxValueValidator, MinValueValidator
 
+from decimal import Decimal
+
 User = get_user_model()
 
 
@@ -65,11 +67,37 @@ class ProductModel(models.Model):
     def __str__(self):
         return self.title
 
+
     @property
     def final_price(self):
-        if self.discount_percent > 0:
-            return self.price * (100 - self.discount_percent) / 100
-        return self.price
+        if not hasattr(self, 'price') or self.price is None:
+            return Decimal(0)
+        
+        if not isinstance(self.price, (int, float)):
+            try:
+                price_value = float(self.price)
+            except (ValueError, TypeError):
+                return Decimal(0)
+        else:
+            price_value = self.price
+        
+        if not hasattr(self, 'discount_percent') or self.discount_percent is None:
+            discount_value = 0
+        elif not isinstance(self.discount_percent, (int, float)):
+            try:
+                discount_value = float(self.discount_percent)
+            except (ValueError, TypeError):
+                discount_value = 0
+        else:
+            discount_value = self.discount_percent
+        
+        discount = Decimal(max(0, min(100, discount_value)))
+        price = Decimal(str(price_value))
+        
+        final = price * (100 - discount) / 100
+        
+        return final
+
 
     @property
     def is_in_stock(self):

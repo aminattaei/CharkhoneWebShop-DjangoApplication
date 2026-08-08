@@ -1,5 +1,8 @@
 {% extends 'website/base.html' %}
+
+{% load humanize %}
 {% load static %}
+
 
 {% block title %}
 لیست محصولات
@@ -297,92 +300,6 @@
                 <!-- End Link -->
               </div>
 
-              <div class="border-bottom pb-4 mb-4">
-                <h5>رتبه بندی</h5>
-
-                <div class="d-grid gap-2">
-                  <!-- Checkboxes -->
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="" id="1starCheckbox">
-                    <label class="form-check-label" for="1starCheckbox">
-                      <span class="d-flex gap-1">
-                        <img src="{% static 'svg/illustrations/star.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star-muted.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star-muted.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star-muted.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star-muted.svg' %}" alt="Review rating" width="16">
-                        (3)
-                      </span>
-                    </label>
-                  </div>
-                  <!-- End Checkboxes -->
-
-                  <!-- Checkboxes -->
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="" id="2starCheckbox">
-                    <label class="form-check-label" for="2starCheckbox">
-                      <span class="d-flex gap-1">
-                        <img src="{% static 'svg/illustrations/star.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star-muted.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star-muted.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star-muted.svg' %}" alt="Review rating" width="16">
-                        (10)
-                      </span>
-                    </label>
-                  </div>
-                  <!-- End Checkboxes -->
-
-                  <!-- Checkboxes -->
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="" id="3starCheckbox">
-                    <label class="form-check-label" for="3starCheckbox">
-                      <span class="d-flex gap-1">
-                        <img src="{% static 'svg/illustrations/star.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star-muted.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star-muted.svg' %}" alt="Review rating" width="16">
-                        (3)
-                      </span>
-                    </label>
-                  </div>
-                  <!-- End Checkboxes -->
-
-                  <!-- Checkboxes -->
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="" id="4starCheckbox">
-                    <label class="form-check-label" for="4starCheckbox">
-                      <span class="d-flex gap-1">
-                        <img src="{% static 'svg/illustrations/star.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star-muted.svg' %}" alt="Review rating" width="16">
-                        (34)
-                      </span>
-                    </label>
-                  </div>
-                  <!-- End Checkboxes -->
-
-                  <!-- Checkboxes -->
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="" id="5starCheckbox">
-                    <label class="form-check-label" for="5starCheckbox">
-                      <span class="d-flex gap-1">
-                        <img src="{% static 'svg/illustrations/star.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star.svg' %}" alt="Review rating" width="16">
-                        <img src="{% static 'svg/illustrations/star.svg' %}" alt="Review rating" width="16">
-                        (120)
-                      </span>
-                    </label>
-                  </div>
-                  <!-- End Checkboxes -->
-                </div>
-              </div>
-
               <div class="d-grid">
                 <button type="button" class="btn btn-white btn-transition">همه را پاک کن</button>
               </div>
@@ -476,9 +393,9 @@
                 <a class="text-dark" href="{% url 'shop:product_detail' pk=product.pk %}">{{ product.title }}</a>
               </h4>
               <p class="card-text text-dark">
-                {{ product.final_price|floatformat:0 }} تومان
+                {{ product.final_price|floatformat:0|intcomma }} تومان
                 {% if product.discount_percent > 0 %}
-                <span class="text-body ms-1"><del>{{ product.price|floatformat:0 }}</del></span>
+                <span class="text-body ms-1"><del>{{ product.price|floatformat:0|intcomma }}</del></span>
                 {% endif %}
               </p>
             </div>
