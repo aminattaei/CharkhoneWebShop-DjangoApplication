@@ -3,6 +3,8 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MaxValueValidator, MinValueValidator
 
+from django.db.models.functions import Cast
+
 
 from django.utils import timezone
 from datetime import timedelta
@@ -98,7 +100,7 @@ class ProductModel(models.Model):
         discount = Decimal(max(0, min(100, discount_value)))
         price = Decimal(str(price_value))
         
-        final = price * (100 - discount) / 100
+        final = int(price * (100 - discount) / 100)
         
         return final
 
