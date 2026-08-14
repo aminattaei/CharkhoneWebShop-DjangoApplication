@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django.contrib.humanize",
+    'django.contrib.humanize',
     "rest_framework",
     "django_celery_results",
     "website",
@@ -203,3 +203,6 @@ LOGGING = {
         },
     },
 }
+
+# Thie line is for humanizer of price
+USE_THOUSAND_SEPARATOR = True

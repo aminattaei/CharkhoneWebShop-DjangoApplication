@@ -3,6 +3,10 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MaxValueValidator, MinValueValidator
 
+
+from django.utils import timezone
+from datetime import timedelta
+
 from decimal import Decimal
 
 User = get_user_model()
@@ -102,6 +106,10 @@ class ProductModel(models.Model):
     @property
     def is_in_stock(self):
         return self.stock > 0
+
+    @property
+    def is_new(self):
+        return self.created_date > timezone.now() - timedelta(days=10)
 
 
 class ProductImageModel(models.Model):

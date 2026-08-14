@@ -15,7 +15,9 @@ class RequestPasswordResetTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
-            email="test@example.com", password="testpass123"
+            username='',
+            email="test@example.com",
+            password="testpass123"
         )
 
     @patch("accounts.api.v1.views.send_reset_email")
@@ -42,7 +44,9 @@ class ResetPasswordTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
-            email="test@example.com", password="oldpass123"
+            username='',
+            email="test@example.com",
+            password="oldpass123"
         )
 
     def test_reset_with_invalid_token(self):
@@ -56,7 +60,7 @@ class ResetPasswordTests(TestCase):
 
     @patch("accounts.api.v1.views.verify_reset_token")
     def test_reset_with_valid_token(self, mock_verify):
-        mock_verify.return_value = self.user.id
+        mock_verify.return_value = self.user.pk
         response = self.client.post(
             "/accounts/api/v1/reset-password/",
             {"token": "valid-token", "new_password": "newpass1234"},

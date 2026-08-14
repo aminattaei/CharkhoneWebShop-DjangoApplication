@@ -31,6 +31,29 @@ services:
     depends_on:
       - db
       
+  locust_master:
+    image: locustio/locust
+    container_name: locust_master
+    command: -f ./core/locust/locustfile.py --master -H http://backend:8089/
+    ports:
+      - "8089:8089"
+    volumes:
+      - ./core/locust:/mnt/locust
+    depends_on:
+      - backend
+    restart: always
+
+  locust_worker:
+    image: locustio/locust
+    container_name: locust_worker
+    command: -f /mnt/locust/locustfile.py --worker --master-host locust_master
+    volumes:
+      - ./core/locust:/mnt/locust
+    depends_on:
+      - locust_master
+    restart: always
+
+  
   smtp4dev:
     image: rnwood/smtp4dev:v3
     restart: always
