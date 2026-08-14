@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.views import generic
 
-from shop.models import ProductModel,ProductStatusType
+from shop.models import ProductModel
 
 # Create your views here.
 
@@ -12,7 +12,7 @@ class IndexTemplateView(generic.TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super(IndexTemplateView, self).get_context_data(**kwargs)
-        context['products'] = ProductModel.objects.filter(status =ProductStatusType.publish.value)[:10]
+        context['products'] = ProductModel.objects.published()[:10]
         return context
     
 

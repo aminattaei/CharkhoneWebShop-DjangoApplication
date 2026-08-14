@@ -3,13 +3,11 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MaxValueValidator, MinValueValidator
 
-from django.db.models.functions import Cast
-
-
 from django.utils import timezone
 from datetime import timedelta
 
-from decimal import Decimal
+from .managers import ProductQuerySet
+from .services import calculate_final_price
 
 User = get_user_model()
 
@@ -65,6 +63,8 @@ class ProductModel(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 
+    objects = ProductQuerySet.as_manager()
+
     class Meta:
         verbose_name = "Product"
         verbose_name_plural = "Products"
@@ -73,37 +73,9 @@ class ProductModel(models.Model):
     def __str__(self):
         return self.title
 
-
     @property
     def final_price(self):
-        if not hasattr(self, 'price') or self.price is None:
-            return Decimal(0)
-        
-        if not isinstance(self.price, (int, float)):
-            try:
-                price_value = float(self.price)
-            except (ValueError, TypeError):
-                return Decimal(0)
-        else:
-            price_value = self.price
-        
-        if not hasattr(self, 'discount_percent') or self.discount_percent is None:
-            discount_value = 0
-        elif not isinstance(self.discount_percent, (int, float)):
-            try:
-                discount_value = float(self.discount_percent)
-            except (ValueError, TypeError):
-                discount_value = 0
-        else:
-            discount_value = self.discount_percent
-        
-        discount = Decimal(max(0, min(100, discount_value)))
-        price = Decimal(str(price_value))
-        
-        final = int(price * (100 - discount) / 100)
-        
-        return final
-
+        return calculate_final_price(self.price, self.discount_percent)
 
     @property
     def is_in_stock(self):
