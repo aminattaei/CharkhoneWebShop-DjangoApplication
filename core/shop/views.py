@@ -1,14 +1,7 @@
-from django.db.models import Q
 from django.views import generic
 
-from .models import ProductCategory, ProductModel, ProductStatusType
-
-ORDER_BY_CHOICES = {
-    "-created_date",
-    "created_date",
-    "-price",
-    "price",
-}
+from .filters import apply_product_filters
+from .models import ProductCategory, ProductModel
 
 
 class ProductListView(generic.ListView):
@@ -18,36 +11,11 @@ class ProductListView(generic.ListView):
 
     def get_queryset(self):
         queryset = (
-            ProductModel.objects.filter(status=ProductStatusType.publish)
+            ProductModel.objects.published()
             .select_related("category", "user")
             .order_by("-created_date")
         )
-
-        q = self.request.GET.get("q", "").strip()
-        if q:
-            queryset = queryset.filter(
-                Q(title__icontains=q)
-                | Q(brief_description__icontains=q)
-                | Q(description__icontains=q)
-            )
-
-        min_price = self.request.GET.get("min_price", "").strip()
-        if min_price:
-            queryset = queryset.filter(price__gte=min_price)
-
-        max_price = self.request.GET.get("max_price", "").strip()
-        if max_price:
-            queryset = queryset.filter(price__lte=max_price)
-
-        category_id = self.request.GET.get("category_id", "").strip()
-        if category_id.isdigit():
-            queryset = queryset.filter(category_id=category_id)
-
-        order_by = self.request.GET.get("order_by", "")
-        if order_by in ORDER_BY_CHOICES:
-            queryset = queryset.order_by(order_by)
-
-        return queryset
+        return apply_product_filters(queryset, self.request.GET)
 
     def get_paginate_by(self, queryset):
         page_size = self.request.GET.get("page_size", "")
@@ -67,7 +35,7 @@ class ProductDetailView(generic.DetailView):
     template_name = "shop/product-details.html"
 
     def get_queryset(self):
-        return ProductModel.objects.prefetch_related("product_images")
+        return ProductModel.objects.prefetch_related("product_images") and ProductModel.objects.get(slug = self.request.slug)
 
     def get_context_data(self, **kwargs):
         context = super(ProductDetailView, self).get_context_data(**kwargs)

@@ -204,5 +204,5 @@ LOGGING = {
     },
 }
 
-# Thie line is for humanizer of price
+# humanizer of price
 USE_THOUSAND_SEPARATOR = True
