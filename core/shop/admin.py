@@ -50,3 +50,6 @@ class ProductImageModelAdmin(admin.ModelAdmin):
     readonly_fields = ("created_date", "updated_date")
     autocomplete_fields = ("product",)
     ordering = ("-created_date",)
+
+
+    

@@ -35,7 +35,7 @@ class ProductDetailView(generic.DetailView):
     template_name = "shop/product-details.html"
 
     def get_queryset(self):
-        return ProductModel.objects.prefetch_related("product_images")
+        return ProductModel.objects.prefetch_related("product_images") and ProductModel.objects.get(slug = self.request.slug)
 
     def get_context_data(self, **kwargs):
         context = super(ProductDetailView, self).get_context_data(**kwargs)
