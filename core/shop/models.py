@@ -70,6 +70,14 @@ class ProductModel(models.Model):
         verbose_name_plural = "Products"
         ordering = ["-created_date"]
 
+
+    def save(self, *args, **kwargs):
+        # Auto-generate slug from title if not provided
+        if not self.slug:
+            self.slug = slugify(self.title, allow_unicode=True)
+        super().save(*args, **kwargs)
+
+
     def __str__(self):
         return self.title
 
