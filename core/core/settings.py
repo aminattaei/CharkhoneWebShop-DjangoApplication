@@ -53,12 +53,24 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
+    # Config price of products and create apis with DRF 
     'django.contrib.humanize',
     "rest_framework",
+
+    # Config for celery package
     "django_celery_results",
+
+    # otp package extension
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+    "django_otp.plugins.otp_static",
+
+    # Apps
     "website",
     "accounts",
     "shop",
+
 ]
 
 MIDDLEWARE = [
@@ -69,6 +81,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'django_otp.middleware.OTPMiddleware', 
 ]
 
 if DEBUG:

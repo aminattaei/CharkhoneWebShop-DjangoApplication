@@ -1,4 +1,6 @@
 from django.views import generic
+from django.shortcuts import get_object_or_404
+
 
 from .filters import apply_product_filters
 from .models import ProductCategory, ProductModel
@@ -34,10 +36,18 @@ class ProductDetailView(generic.DetailView):
     context_object_name = "product"
     template_name = "shop/product-details.html"
 
-    def get_queryset(self):
-        return ProductModel.objects.prefetch_related("product_images") and ProductModel.objects.get(slug = self.request.slug)
+    def get_object(self, queryset=None):
+        slug = self.kwargs.get('slug')
+        if slug is None:
+            raise Http404("محصول یافت نشد")
+        
+        return get_object_or_404(
+            ProductModel.objects.prefetch_related("product_images"),
+            slug=slug
+        )
 
     def get_context_data(self, **kwargs):
-        context = super(ProductDetailView, self).get_context_data(**kwargs)
-        context["images"] = self.get_object().product_images.all() # type: ignore
+        context = super().get_context_data(**kwargs)
+        product = self.object
+        context["images"] = product.product_images.all()
         return context
