@@ -97,22 +97,22 @@ It provides a production-ready starting point for online stores with:
 
 ### Dependencies
 
-| Package                       | Version | Purpose                         |
-| ----------------------------- | ------- | ------------------------------- |
-| `django`                      | 5.2.16  | Web framework                   |
-| `djangorestframework`         | 3.17.1  | REST API framework              |
-| `psycopg[binary]`             | 3.1.12  | PostgreSQL adapter              |
-| `python-decouple`             | 3.8     | Environment variables           |
-| `pillow`                      | 10.2.0  | Image processing                |
-| `django-debug-toolbar`        | 4.2.0   | Debug toolbar                   |
-| `celery`                      | 5.4.0   | Async task queue                |
-| `django-celery-results`       | 2.5.1   | Celery result backend           |
-| `django-otp`                  | 1.7.0   | OTP/TOTP support                |
-| `pytest`                      | 9.1.1   | Test runner                     |
-| `pytest-django`               | 4.14.0  | Django pytest integration       |
-| `Faker`                       | 40.36.0 | Test data generation            |
-| `requests`                    | 2.31.0  | HTTP client                     |
-| `sqlparse`                    | 0.4.4   | SQL parser                      |
+| Package                 | Version | Purpose                   |
+| ----------------------- | ------- | ------------------------- |
+| `django`                | 5.2.16  | Web framework             |
+| `djangorestframework`   | 3.17.1  | REST API framework        |
+| `psycopg[binary]`       | 3.1.12  | PostgreSQL adapter        |
+| `python-decouple`       | 3.8     | Environment variables     |
+| `pillow`                | 10.2.0  | Image processing          |
+| `django-debug-toolbar`  | 4.2.0   | Debug toolbar             |
+| `celery`                | 5.4.0   | Async task queue          |
+| `django-celery-results` | 2.5.1   | Celery result backend     |
+| `django-otp`            | 1.7.0   | OTP/TOTP support          |
+| `pytest`                | 9.1.1   | Test runner               |
+| `pytest-django`         | 4.14.0  | Django pytest integration |
+| `Faker`                 | 40.36.0 | Test data generation      |
+| `requests`              | 2.31.0  | HTTP client               |
+| `sqlparse`              | 0.4.4   | SQL parser                |
 
 See `requirements.txt` and `core/requirements.txt` for the full pinned dependency list.
 
@@ -126,37 +126,37 @@ The project uses `python-decouple` to load environment variables from `envs/dev/
 
 #### Django
 
-| Variable               | Default               | Description                                  |
-| ---------------------- | --------------------- | -------------------------------------------- |
-| `DJANGO_SECRET_KEY`    | *(required)*          | Django secret key                            |
-| `DJANGO_DEBUG`         | `True`                | Enable debug mode                            |
-| `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` | Allowed hosts (comma-separated)              |
-| `TIME_ZONE`            | `UTC`                 | Timezone                                     |
+| Variable               | Default               | Description                     |
+| ---------------------- | --------------------- | ------------------------------- |
+| `DJANGO_SECRET_KEY`    | *(required)*          | Django secret key               |
+| `DJANGO_DEBUG`         | `True`                | Enable debug mode               |
+| `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` | Allowed hosts (comma-separated) |
+| `TIME_ZONE`            | `UTC`                 | Timezone                        |
 
 #### PostgreSQL
 
-| Variable            | Default    | Description                          |
-| ------------------- | ---------- | ------------------------------------ |
-| `POSTGRES_DB`       | `postgres` | Database name                        |
-| `POSTGRES_USER`     | `postgres` | Database user                        |
-| `POSTGRES_PASSWORD` | `postgres` | Database password                    |
-| `POSTGRES_HOST`     | `db`       | Database host (Docker service name)  |
-| `POSTGRES_PORT`     | `5432`     | Database port                        |
+| Variable            | Default    | Description                         |
+| ------------------- | ---------- | ----------------------------------- |
+| `POSTGRES_DB`       | `postgres` | Database name                       |
+| `POSTGRES_USER`     | `postgres` | Database user                       |
+| `POSTGRES_PASSWORD` | `postgres` | Database password                   |
+| `POSTGRES_HOST`     | `db`       | Database host (Docker service name) |
+| `POSTGRES_PORT`     | `5432`     | Database port                       |
 
 #### Email (smtp4dev)
 
-| Variable         | Default     | Description                |
-| ---------------- | ----------- | -------------------------- |
-| `EMAIL_HOST`     | `smtp4dev`  | SMTP host                  |
-| `EMAIL_PORT`     | `25`        | SMTP port                  |
-| `EMAIL_USE_TLS`  | `False`     | Enable TLS                 |
+| Variable        | Default    | Description |
+| --------------- | ---------- | ----------- |
+| `EMAIL_HOST`    | `smtp4dev` | SMTP host   |
+| `EMAIL_PORT`    | `25`       | SMTP port   |
+| `EMAIL_USE_TLS` | `False`    | Enable TLS  |
 
 #### Celery
 
-| Variable               | Default            | Description              |
-| ---------------------- | ------------------ | ------------------------ |
-| `CELERY_BROKER_URL`    | `redis://localhost:6379/0` | Redis broker URL  |
-| `CELERY_RESULT_BACKEND`| `django-db`        | Result backend           |
+| Variable                | Default                    | Description      |
+| ----------------------- | -------------------------- | ---------------- |
+| `CELERY_BROKER_URL`     | `redis://localhost:6379/0` | Redis broker URL |
+| `CELERY_RESULT_BACKEND` | `django-db`                | Result backend   |
 
 > **Warning:** Never commit `.env` to version control. Change `DJANGO_SECRET_KEY` and database credentials for production.
 
@@ -469,15 +469,15 @@ The project follows a **modular Django app architecture** with clear separation 
 
 ### Components
 
-| Component       | Location                          | Responsibility                              |
-| --------------- | --------------------------------- | ------------------------------------------- |
-| **Website**     | `core/website/`                   | Static pages (home, about, contact)         |
-| **Accounts**    | `core/accounts/`                  | Auth, password reset, user management       |
-| **Shop**        | `core/shop/`                      | Product catalog, categories, filtering      |
-| **Core**        | `core/core/`                      | Settings, middleware, URL config            |
-| **PostgreSQL**  | Docker service `db`               | Primary database                            |
-| **smtp4dev**    | Docker service `smtp4dev`         | Development email server                    |
-| **Locust**      | Docker services `locust_*`        | Load testing                                |
+| Component      | Location                   | Responsibility                         |
+| -------------- | -------------------------- | -------------------------------------- |
+| **Website**    | `core/website/`            | Static pages (home, about, contact)    |
+| **Accounts**   | `core/accounts/`           | Auth, password reset, user management  |
+| **Shop**       | `core/shop/`               | Product catalog, categories, filtering |
+| **Core**       | `core/core/`               | Settings, middleware, URL config       |
+| **PostgreSQL** | Docker service `db`        | Primary database                       |
+| **smtp4dev**   | Docker service `smtp4dev`  | Development email server               |
+| **Locust**     | Docker services `locust_*` | Load testing                           |
 
 ### Data flow
 
@@ -567,7 +567,7 @@ No CI/CD pipeline is currently configured. Future additions could include:
 
 ## MIT License
 
-<<<<<<< HEAD
+
 Copyright (c) 2026 Amin Attaei
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -584,7 +584,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-=======
+
 Private project.
 
 ---
@@ -592,4 +592,4 @@ Private project.
 ## Support / Contact
 
 For questions or support regarding this project, please contact the project maintainer.
->>>>>>> f5588b2 (feat(shop): implement slug-based routing and integrate django-otp)
+
