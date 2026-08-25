@@ -132,7 +132,6 @@ class Command(BaseCommand):
             )
 
             admin_user = User.objects.create_superuser(
-                username=None,
                 email="admin@example.com",
                 password="admin123",
             )

@@ -50,4 +50,4 @@ class ProductDetailView(generic.DetailView):
         context = super().get_context_data(**kwargs)
         product = self.object
         context["images"] = product.product_images.all()
-        return context
+        return context  
