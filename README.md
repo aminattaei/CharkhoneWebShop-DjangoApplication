@@ -1,6 +1,6 @@
 # CharkhoneApplication-Django
 
-A modular Django e-commerce platform built with Django 5.2, Django REST Framework, and Docker. It provides a Persian RTL online shop with product catalog, user authentication, password reset via JWT-like tokens, and a complete admin interface.
+A modular Django e-commerce platform built with Django 5.2, Django REST Framework, and Docker. It provides a Persian RTL online shop with product catalog, user authentication, email verification, password reset via JWT-like tokens, and a complete admin interface.
 
 ## Table of Contents
 
@@ -50,11 +50,12 @@ It provides a production-ready starting point for online stores with:
 
 ## Features
 
-- **Custom User Authentication** — Email-based login with `AbstractBaseUser`, user types (customer, admin, superuser), and profile management
+- **Custom User Authentication** — Email-based login with `AbstractBaseUser`, user types (customer, admin, superuser), profile management, and account verification
+- **Email Verification Flow** — JWT-based verification tokens with 12-hour expiry, auto-send on registration, request/resend verification pages, account deactivation until verified
 - **Password Reset via JWT-like Tokens** — 48-hour expiry, one-time use, rate limiting, account locking after failed attempts, and no email enumeration
 - **Product Catalog** — Slug-based product routing, categories, stock tracking, discount percentages, and final price calculation
 - **Product Filtering & Search** — Search by title, filter by price range and category, sort by price/date, with pagination
-- **Django Admin Integration** — Custom admin configurations for User, Profile, PasswordResetToken, ProductCategory, and ProductModel
+- **Django Admin Integration** — Custom admin configurations for User, Profile, PasswordResetToken, EmailVerificationToken, ProductCategory, and ProductModel
 - **Django Debug Toolbar** — SQL queries, request/response inspection, template timing, and settings viewer (development only)
 - **Email Testing with smtp4dev** — Captures all outgoing emails locally at http://localhost:5000
 - **Celery + Redis** — Configured for asynchronous task processing (e.g., email sending)
@@ -344,14 +345,15 @@ CharkhoneApplication-django/
 │   │   ├── admin.py                   # Custom admin configuration
 │   │   ├── apps.py
 │   │   ├── forms.py                   # Custom AuthenticationForm
-│   │   ├── models.py                  # User, Profile, PasswordResetToken
+│   │   ├── models.py                  # User, Profile, PasswordResetToken, EmailVerificationToken
 │   │   ├── throttles.py               # Rate limiting classes
 │   │   ├── tasks.py                   # Celery async tasks
 │   │   ├── urls.py                    # Account URL patterns
 │   │   ├── views/                     # Views package
 │   │   │   ├── __init__.py
 │   │   │   ├── account_views.py       # LoginView
-│   │   │   └── password_views.py      # Password reset views
+│   │   │   ├── password_views.py      # Password reset views
+│   │   │   └── verification_views.py  # Email verification views
 │   │   ├── api/v1/                    # DRF API endpoints
 │   │   │   ├── __init__.py
 │   │   │   ├── serializers.py
@@ -361,7 +363,8 @@ CharkhoneApplication-django/
 │   │   │   ├── __init__.py
 │   │   │   ├── email.py
 │   │   │   ├── password_reset.py
-│   │   │   └── tokens.py
+│   │   │   ├── tokens.py
+│   │   │   └── verification.py
 │   │   ├── management/commands/       # Custom management commands
 │   │   │   ├── __init__.py
 │   │   │   └── cleanup_tokens.py
@@ -405,9 +408,15 @@ CharkhoneApplication-django/
 │   │   │   ├── passwod_reset.html
 │   │   │   ├── password_reset_complete.html
 │   │   │   ├── password_reset_confirm.html
+│   │   │   ├── password_reset_confirm_custom.html
 │   │   │   ├── password_reset_done.html
 │   │   │   ├── password_reset_email.html
-│   │   │   └── reset_password_confirm.html
+│   │   │   ├── password_reset_request.html
+│   │   │   ├── password_reset_subject.txt
+│   │   │   ├── reset_password_confirm.html
+│   │   │   ├── verify_email.html
+│   │   │   ├── verify_email_confirm.html
+│   │   │   └── verify_email_sent.html
 │   │   ├── shop/
 │   │   │   ├── product-details.html
 │   │   │   └── product-grid.html
@@ -492,6 +501,44 @@ The project follows a **modular Django app architecture** with clear separation 
 - **SRP (Single Responsibility Principle)** — Services separated from views
 - **OCP (Open/Closed Principle)** — Strategy-based filters in shop (`filters.py`)
 - **DIP (Dependency Inversion Principle)** — Email source abstracted in accounts services
+
+---
+
+## Completed Tasks
+
+### Email Verification Implementation
+
+- Added `EmailVerificationToken` model with 12-hour JWT expiry and one-time use
+- Added `deactivated_at` field to `User` model for tracking deactivated accounts
+- Created verification service layer (`core/accounts/services/verification.py`) with token generation, verification, and email sending
+- Implemented views: `RequestVerificationView`, `ConfirmVerificationView`, `ResendVerificationView`
+- Added templates: `verify_email.html`, `verify_email_sent.html`, `verify_email_confirm.html`
+- Auto-send verification email on user creation via Django signal
+- URL patterns: `/accounts/verify-email/`, `/accounts/verify-email/sent/`, `/accounts/verify-email/confirm/`
+- Unverified users cannot log in (`AuthenticationForm.confirm_login_allowed`)
+
+### Password Reset Flow Rewrite
+
+- Replaced Django built-in auth views with custom `PasswordResetRequestView` and `PasswordResetConfirmView`
+- Password reset tokens use JWT-like signing with 48-hour expiry
+- Added `PasswordResetDoneView` and `PasswordResetCompleteView` for success pages
+- Custom templates: `password_reset_request.html`, `password_reset_confirm_custom.html`, `password_reset_done.html`, `password_reset_complete.html`
+- URL patterns: `/accounts/password_reset/`, `/accounts/password_reset/done/`, `/accounts/reset/<token>/`, `/accounts/reset/done/`
+
+---
+
+## Bug Fixes
+
+- Fixed URL pattern mismatch for email verification (query string token vs path parameter)
+- Fixed password reset link pointing to wrong URL (`/accounts/reset-password/` → `/accounts/reset/<token>/`)
+- Enabled `is_verified` check in login form to prevent unverified users from logging in
+- Added GET handler to `ResendVerificationView` to fix 405 Method Not Allowed
+- Made email sending safe for users without a profile (`getattr` fallback instead of direct attribute access)
+- Replaced `datetime.now()` with `timezone.now()` for timezone-aware token timestamps
+- Increased timestamp precision from seconds to microseconds to prevent token collisions
+- Improved logging in token verification and invalidation functions
+- Removed unused imports (`reverse_lazy`, `timezone`) from verification views
+- Fixed missing newline at end of `core/accounts/services/tokens.py`
 
 ---
 

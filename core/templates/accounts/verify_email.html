@@ -1,0 +1,34 @@
+{% extends 'website/base.html' %}
+
+{% block title %}
+تایید ایمیل
+{% endblock title %}
+
+{% block content %}
+<div class="container content-space-3 content-space-t-lg-4 content-space-b-lg-3">
+  <div class="flex-grow-1 mx-auto" style="max-width: 28rem;">
+    <div class="text-center mb-5 mb-md-7">
+      <h1 class="h2">تایید ایمیل</h1>
+      <p>برای تایید ایمیل خود، آدرس ایمیل خود را وارد کنید.</p>
+    </div>
+
+    <form method="post" action="{% url 'accounts:verify-email' %}">
+      {% csrf_token %}
+      <div class="mb-4">
+        <label class="form-label" for="email">ایمیل شما</label>
+        <input type="email" class="form-control form-control-lg text-center" name="email" id="email"
+          placeholder="email@site.com" aria-label="email@site.com" required>
+        <span class="invalid-feedback">لطفا یک آدرس ایمیل معتبر وارد کنید.</span>
+      </div>
+
+      <div class="d-grid mb-3">
+        <button type="submit" class="btn btn-primary btn-lg">ارسال لینک تایید</button>
+      </div>
+
+      <div class="text-center">
+        <p>قبلاً تایید کرده‌اید؟ <a class="link" href="{% url 'accounts:login' %}">ورود</a></p>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock content %}

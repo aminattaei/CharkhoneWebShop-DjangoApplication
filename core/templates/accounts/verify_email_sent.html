@@ -1,0 +1,24 @@
+{% extends 'website/base.html' %}
+
+{% block title %}
+ایمیل تایید ارسال شد
+{% endblock title %}
+
+{% block content %}
+<div class="container content-space-3 content-space-t-lg-4 content-space-b-lg-3">
+  <div class="flex-grow-1 mx-auto" style="max-width: 28rem;">
+    <div class="text-center mb-5 mb-md-7">
+      <h1 class="h2">ایمیل تایید ارسال شد</h1>
+      <p>لینک تایید به ایمیل شما ارسال شد. لطفا صندوق ورودی خود را بررسی کنید.</p>
+    </div>
+
+    <div class="d-grid mb-3">
+      <a class="btn btn-primary btn-lg" href="{% url 'accounts:login' %}">بازگشت به صفحه ورود</a>
+    </div>
+
+    <div class="text-center">
+      <p>ایمیل را دریافت نکردید؟ <a class="link" href="{% url 'accounts:verify-email' %}">ارسال مجدد</a></p>
+    </div>
+  </div>
+</div>
+{% endblock content %}
