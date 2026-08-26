@@ -43,7 +43,7 @@ def convert_static_paths(file_path, dry_run=False, backup=False):
 
     # Skip files that already use {% static %}
     if re.search(r"{%\s*static\s+['\"]", content):
-        print(f"⏭️  Skipping {file_path} (already using {% static %})")
+        print(f"⏭️  Skipping {file_path} (already using {{% static %}})")
         return 0
 
     # Find all matches
@@ -75,7 +75,7 @@ def convert_static_paths(file_path, dry_run=False, backup=False):
         clean_path = re.sub(r'^/?(?:static|assets)/', '', path)
 
         # Build the new tag
-        new_text = f'{attr}={quote}{% static "{clean_path}" %}{quote}'
+        new_text = f'{attr}={quote}{{% static "{clean_path}" %}}{quote}'
 
         # Perform the replacement in the new content
         new_content = new_content[:match.start()] + new_text + new_content[match.end():]

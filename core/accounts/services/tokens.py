@@ -1,8 +1,8 @@
 import hashlib
 import logging
-from datetime import datetime
 
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
+from django.utils import timezone
 
 from accounts.models import PasswordResetToken
 
@@ -13,7 +13,7 @@ TOKEN_MAX_AGE = 48 * 3600
 
 
 def generate_reset_token(user):
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    timestamp = timezone.now().strftime("%Y%m%d%H%M%S%f")
     raw_token = f"reset:{user.id}:{timestamp}"
     signed_token = signer.sign(raw_token)
     PasswordResetToken.create_token(user, raw_token)
@@ -35,6 +35,7 @@ def verify_reset_token(token):
         )
         if reset_token.is_valid():
             return reset_token.user_id
+        logger.warning("توکن بازیابی منقضی شده در دیتابیس: %s", token[:20])
     except PasswordResetToken.DoesNotExist:
         logger.warning("توکن در دیتابیس یافت نشد: %s", token[:20])
 
@@ -46,5 +47,5 @@ def mark_token_used(token):
         raw_token = signer.unsign(token, max_age=TOKEN_MAX_AGE)
         token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
         PasswordResetToken.objects.filter(token_hash=token_hash).update(is_used=True)
-    except (BadSignature, SignatureExpired):
-        logger.warning("خطا در غیرفعال کردن توکن")
+    except (BadSignature, SignatureExpired) as e:
+        logger.warning("خطا در غیرفعال کردن توکن بازیابی: %s", e)

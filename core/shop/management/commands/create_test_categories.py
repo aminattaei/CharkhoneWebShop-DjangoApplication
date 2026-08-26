@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.utils.text import slugify
-from faker import Faker # type: ignore :this is a bug from my ide, don't attension to it
+from faker import Faker
 
 from shop.models import ProductCategory
 

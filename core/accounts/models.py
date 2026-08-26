@@ -61,6 +61,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_locked = models.BooleanField(default=False)
     failed_reset_attempts = models.PositiveIntegerField(default=0)
     last_reset_attempt = models.DateTimeField(null=True, blank=True)
+    deactivated_at = models.DateTimeField(null=True, blank=True)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 
@@ -121,7 +122,46 @@ class PasswordResetToken(models.Model):
         return f"ResetToken for {self.user.email}"
 
 
+class EmailVerificationToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token_hash = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+
+    def is_valid(self):
+        return not self.is_used and timezone.now() < self.expires_at
+
+    @classmethod
+    def create_token(cls, user, raw_token):
+        token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
+        expires_at = timezone.now() + timezone.timedelta(hours=12)
+        cls.objects.filter(user=user, is_used=False).update(is_used=True)
+        return cls.objects.create(
+            user=user,
+            token_hash=token_hash,
+            expires_at=expires_at,
+        )
+
+    def __str__(self):
+        return f"VerificationToken for {self.user.email}"
+
+
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created and instance.type == UserType.customer.value:
         Profile.objects.get_or_create(user=instance)
+
+
+@receiver(post_save, sender=User)
+def send_verification_email_on_create(sender, instance, created, **kwargs):
+    if created and not instance.is_verified and instance.is_active:
+        from accounts.services.verification import (
+            build_verification_link,
+            generate_verification_token,
+            send_verification_email,
+        )
+
+        token = generate_verification_token(instance)
+        link = build_verification_link(request=None, token=token)
+        send_verification_email(instance, link)

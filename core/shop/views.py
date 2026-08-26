@@ -1,3 +1,4 @@
+from django.http import Http404
 from django.views import generic
 from django.shortcuts import get_object_or_404
 
@@ -50,4 +51,4 @@ class ProductDetailView(generic.DetailView):
         context = super().get_context_data(**kwargs)
         product = self.object
         context["images"] = product.product_images.all()
-        return context  
+        return context

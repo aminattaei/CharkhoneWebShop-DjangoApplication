@@ -1,6 +1,10 @@
 # CharkhoneApplication-Django
 
+
 A modular Django e-commerce platform built with Django 5.2, Django REST Framework, and Docker. It provides a Persian RTL online shop with product catalog, user authentication, password reset via JWT-like tokens, and a complete admin interface.
+
+A modular Django e-commerce platform built with Django 5.2, Django REST Framework, and Docker. It provides a Persian RTL online shop with product catalog, user authentication, email verification, password reset via JWT-like tokens, and a complete admin interface.
+
 
 ## Table of Contents
 
@@ -50,11 +54,20 @@ It provides a production-ready starting point for online stores with:
 
 ## Features
 
+
 - **Custom User Authentication** — Email-based login with `AbstractBaseUser`, user types (customer, admin, superuser), and profile management
 - **Password Reset via JWT-like Tokens** — 48-hour expiry, one-time use, rate limiting, account locking after failed attempts, and no email enumeration
 - **Product Catalog** — Slug-based product routing, categories, stock tracking, discount percentages, and final price calculation
 - **Product Filtering & Search** — Search by title, filter by price range and category, sort by price/date, with pagination
 - **Django Admin Integration** — Custom admin configurations for User, Profile, PasswordResetToken, ProductCategory, and ProductModel
+
+- **Custom User Authentication** — Email-based login with `AbstractBaseUser`, user types (customer, admin, superuser), profile management, and account verification
+- **Email Verification Flow** — JWT-based verification tokens with 12-hour expiry, auto-send on registration, request/resend verification pages, account deactivation until verified
+- **Password Reset via JWT-like Tokens** — 48-hour expiry, one-time use, rate limiting, account locking after failed attempts, and no email enumeration
+- **Product Catalog** — Slug-based product routing, categories, stock tracking, discount percentages, and final price calculation
+- **Product Filtering & Search** — Search by title, filter by price range and category, sort by price/date, with pagination
+- **Django Admin Integration** — Custom admin configurations for User, Profile, PasswordResetToken, EmailVerificationToken, ProductCategory, and ProductModel
+
 - **Django Debug Toolbar** — SQL queries, request/response inspection, template timing, and settings viewer (development only)
 - **Email Testing with smtp4dev** — Captures all outgoing emails locally at http://localhost:5000
 - **Celery + Redis** — Configured for asynchronous task processing (e.g., email sending)
@@ -97,6 +110,7 @@ It provides a production-ready starting point for online stores with:
 
 ### Dependencies
 
+
 | Package                 | Version | Purpose                   |
 | ----------------------- | ------- | ------------------------- |
 | `django`                | 5.2.16  | Web framework             |
@@ -114,6 +128,24 @@ It provides a production-ready starting point for online stores with:
 | `requests`              | 2.31.0  | HTTP client               |
 | `sqlparse`              | 0.4.4   | SQL parser                |
 
+| Package                 | Version | Purpose                   |
+| ----------------------- | ------- | ------------------------- |
+| `django`                | 5.2.16  | Web framework             |
+| `djangorestframework`   | 3.17.1  | REST API framework        |
+| `psycopg[binary]`       | 3.1.12  | PostgreSQL adapter        |
+| `python-decouple`       | 3.8     | Environment variables     |
+| `pillow`                | 10.2.0  | Image processing          |
+| `django-debug-toolbar`  | 4.2.0   | Debug toolbar             |
+| `celery`                | 5.4.0   | Async task queue          |
+| `django-celery-results` | 2.5.1   | Celery result backend     |
+| `django-otp`            | 1.7.0   | OTP/TOTP support          |
+| `pytest`                | 9.1.1   | Test runner               |
+| `pytest-django`         | 4.14.0  | Django pytest integration |
+| `Faker`                 | 40.36.0 | Test data generation      |
+| `requests`              | 2.31.0  | HTTP client               |
+| `sqlparse`              | 0.4.4   | SQL parser                |
+
+
 See `requirements.txt` and `core/requirements.txt` for the full pinned dependency list.
 
 ---
@@ -125,6 +157,39 @@ See `requirements.txt` and `core/requirements.txt` for the full pinned dependenc
 The project uses `python-decouple` to load environment variables from `envs/dev/django/.env`. The sample file (`envs/dev/django/.env.sample`) is empty by default; create your `.env` with the following variables:
 
 #### Django
+
+
+| Variable               | Default               | Description                     |
+| ---------------------- | --------------------- | ------------------------------- |
+| `DJANGO_SECRET_KEY`    | *(required)*          | Django secret key               |
+| `DJANGO_DEBUG`         | `True`                | Enable debug mode               |
+| `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` | Allowed hosts (comma-separated) |
+| `TIME_ZONE`            | `UTC`                 | Timezone                        |
+
+#### PostgreSQL
+
+| Variable            | Default    | Description                         |
+| ------------------- | ---------- | ----------------------------------- |
+| `POSTGRES_DB`       | `postgres` | Database name                       |
+| `POSTGRES_USER`     | `postgres` | Database user                       |
+| `POSTGRES_PASSWORD` | `postgres` | Database password                   |
+| `POSTGRES_HOST`     | `db`       | Database host (Docker service name) |
+| `POSTGRES_PORT`     | `5432`     | Database port                       |
+
+#### Email (smtp4dev)
+
+| Variable        | Default    | Description |
+| --------------- | ---------- | ----------- |
+| `EMAIL_HOST`    | `smtp4dev` | SMTP host   |
+| `EMAIL_PORT`    | `25`       | SMTP port   |
+| `EMAIL_USE_TLS` | `False`    | Enable TLS  |
+
+#### Celery
+
+| Variable                | Default                    | Description      |
+| ----------------------- | -------------------------- | ---------------- |
+| `CELERY_BROKER_URL`     | `redis://localhost:6379/0` | Redis broker URL |
+| `CELERY_RESULT_BACKEND` | `django-db`                | Result backend   |
 
 | Variable               | Default               | Description                     |
 | ---------------------- | --------------------- | ------------------------------- |
@@ -345,6 +410,7 @@ CharkhoneApplication-django/
 │   │   ├── apps.py
 │   │   ├── forms.py                   # Custom AuthenticationForm
 │   │   ├── models.py                  # User, Profile, PasswordResetToken
+│   │   ├── models.py                  # User, Profile, PasswordResetToken, EmailVerificationToken
 │   │   ├── throttles.py               # Rate limiting classes
 │   │   ├── tasks.py                   # Celery async tasks
 │   │   ├── urls.py                    # Account URL patterns
@@ -352,6 +418,8 @@ CharkhoneApplication-django/
 │   │   │   ├── __init__.py
 │   │   │   ├── account_views.py       # LoginView
 │   │   │   └── password_views.py      # Password reset views
+│   │   │   ├── password_views.py      # Password reset views
+│   │   │   └── verification_views.py  # Email verification views
 │   │   ├── api/v1/                    # DRF API endpoints
 │   │   │   ├── __init__.py
 │   │   │   ├── serializers.py
@@ -362,6 +430,8 @@ CharkhoneApplication-django/
 │   │   │   ├── email.py
 │   │   │   ├── password_reset.py
 │   │   │   └── tokens.py
+│   │   │   ├── tokens.py
+│   │   │   └── verification.py
 │   │   ├── management/commands/       # Custom management commands
 │   │   │   ├── __init__.py
 │   │   │   └── cleanup_tokens.py
@@ -408,6 +478,15 @@ CharkhoneApplication-django/
 │   │   │   ├── password_reset_done.html
 │   │   │   ├── password_reset_email.html
 │   │   │   └── reset_password_confirm.html
+│   │   │   ├── password_reset_confirm_custom.html
+│   │   │   ├── password_reset_done.html
+│   │   │   ├── password_reset_email.html
+│   │   │   ├── password_reset_request.html
+│   │   │   ├── password_reset_subject.txt
+│   │   │   ├── reset_password_confirm.html
+│   │   │   ├── verify_email.html
+│   │   │   ├── verify_email_confirm.html
+│   │   │   └── verify_email_sent.html
 │   │   ├── shop/
 │   │   │   ├── product-details.html
 │   │   │   └── product-grid.html
@@ -469,15 +548,24 @@ The project follows a **modular Django app architecture** with clear separation 
 
 ### Components
 
-| Component      | Location                   | Responsibility                         |
-| -------------- | -------------------------- | -------------------------------------- |
-| **Website**    | `core/website/`            | Static pages (home, about, contact)    |
-| **Accounts**   | `core/accounts/`           | Auth, password reset, user management  |
-| **Shop**       | `core/shop/`               | Product catalog, categories, filtering |
-| **Core**       | `core/core/`               | Settings, middleware, URL config       |
-| **PostgreSQL** | Docker service `db`        | Primary database                       |
-| **smtp4dev**   | Docker service `smtp4dev`  | Development email server               |
-| **Locust**     | Docker services `locust_*` | Load testing                           |
+| Component       | Location                          | Responsibility                              |
+| --------------- | --------------------------------- | ------------------------------------------- |
+| **Website**     | `core/website/`                   | Static pages (home, about, contact)         |
+| **Accounts**    | `core/accounts/`                  | Auth, password reset, user management       |
+| **Shop**        | `core/shop/`                      | Product catalog, categories, filtering      |
+| **Core**        | `core/core/`                      | Settings, middleware, URL config            |
+| **PostgreSQL**  | Docker service `db`               | Primary database                            |
+| **smtp4dev**    | Docker service `smtp4dev`         | Development email server                    |
+| **Locust**      | Docker services `locust_*`        | Load testing                                |
+| Component       | Location                          | Responsibility                              |
+| --------------- | --------------------------------- | ------------------------------------------- |
+| **Website**     | `core/website/`                   | Static pages (home, about, contact)         |
+| **Accounts**    | `core/accounts/`                  | Auth, password reset, user management       |
+| **Shop**        | `core/shop/`                      | Product catalog, categories, filtering      |
+| **Core**        | `core/core/`                      | Settings, middleware, URL config            |
+| **PostgreSQL**  | Docker service `db`               | Primary database                            |
+| **smtp4dev**    | Docker service `smtp4dev`         | Development email server                    |
+| **Locust**      | Docker services `locust_*`        | Load testing                                |
 
 ### Data flow
 
@@ -494,6 +582,7 @@ The project follows a **modular Django app architecture** with clear separation 
 - **DIP (Dependency Inversion Principle)** — Email source abstracted in accounts services
 
 ---
+
 
 ## Deployment
 
@@ -585,6 +674,117 @@ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 
+## Completed Tasks
+
+### Email Verification Implementation
+
+- Added `EmailVerificationToken` model with 12-hour JWT expiry and one-time use
+- Added `deactivated_at` field to `User` model for tracking deactivated accounts
+- Created verification service layer (`core/accounts/services/verification.py`) with token generation, verification, and email sending
+- Implemented views: `RequestVerificationView`, `ConfirmVerificationView`, `ResendVerificationView`
+- Added templates: `verify_email.html`, `verify_email_sent.html`, `verify_email_confirm.html`
+- Auto-send verification email on user creation via Django signal
+- URL patterns: `/accounts/verify-email/`, `/accounts/verify-email/sent/`, `/accounts/verify-email/confirm/`
+- Unverified users cannot log in (`AuthenticationForm.confirm_login_allowed`)
+
+### Password Reset Flow Rewrite
+
+- Replaced Django built-in auth views with custom `PasswordResetRequestView` and `PasswordResetConfirmView`
+- Password reset tokens use JWT-like signing with 48-hour expiry
+- Added `PasswordResetDoneView` and `PasswordResetCompleteView` for success pages
+- Custom templates: `password_reset_request.html`, `password_reset_confirm_custom.html`, `password_reset_done.html`, `password_reset_complete.html`
+- URL patterns: `/accounts/password_reset/`, `/accounts/password_reset/done/`, `/accounts/reset/<token>/`, `/accounts/reset/done/`
+
+---
+
+## Bug Fixes
+
+- Fixed URL pattern mismatch for email verification (query string token vs path parameter)
+- Fixed password reset link pointing to wrong URL (`/accounts/reset-password/` → `/accounts/reset/<token>/`)
+- Enabled `is_verified` check in login form to prevent unverified users from logging in
+- Added GET handler to `ResendVerificationView` to fix 405 Method Not Allowed
+- Made email sending safe for users without a profile (`getattr` fallback instead of direct attribute access)
+- Replaced `datetime.now()` with `timezone.now()` for timezone-aware token timestamps
+- Increased timestamp precision from seconds to microseconds to prevent token collisions
+- Improved logging in token verification and invalidation functions
+- Removed unused imports (`reverse_lazy`, `timezone`) from verification views
+- Fixed missing newline at end of `core/accounts/services/tokens.py`
+
+---
+
+## Deployment
+
+### Production setup
+
+The current configuration is optimized for local development with Docker. For production:
+
+1. **Environment variables** — Set `DJANGO_DEBUG=False`, strong `DJANGO_SECRET_KEY`, production database credentials, and a real SMTP server
+2. **Static files** — Run `python manage.py collectstatic` and serve via Nginx or a CDN
+3. **Database** — Use a managed PostgreSQL service or persistent volume backups
+4. **Celery** — Deploy Redis and Celery workers as separate services
+5. **Gunicorn/Uvicorn** — Replace `runserver` with a production ASGI/WSGI server
+
+### Deployment instructions
+
+```bash
+# Build production image
+docker build -t charkhone-backend ./dockerfiles/dev/django
+
+# Run with production environment
+docker run -p 8000:8000 \
+  -e DJANGO_SECRET_KEY=prod-secret \
+  -e DJANGO_DEBUG=False \
+  -e POSTGRES_HOST=your-db-host \
+  charkhone-backend
+```
+
+### CI/CD
+
+No CI/CD pipeline is currently configured. Future additions could include:
+- GitHub Actions / GitLab CI for automated testing
+- Docker image building and pushing to a registry
+- Automated migrations on deployment
+
+---
+
+## Known Issues
+
+### Limitations
+
+- **No payment gateway integration** — The project is an MVP without checkout or payment processing
+- **No inventory management** beyond basic `stock` field on `ProductModel`
+- **Django OTP installed but unused** — TOTP/static token plugins are in `INSTALLED_APPS` but not wired into views
+- **Celery broker not containerized** — Redis is expected at `localhost:6379` but is not defined in `docker-compose.yml`
+- **No CI/CD** — Manual testing and deployment only
+- **`.env.sample` is empty** — Does not document required environment variables
+- **Persian-only frontend** — No i18n/l10n framework for multi-language support
+
+### Current problems
+
+- Typo in template filename: `passwod_reset.html` (missing `r`)
+- `django-rest-framework` version shows `0.1.0` in `requirements.txt` (likely a packaging metadata issue; DRF itself is versioned separately)
+- No production ASGI/WSGI server configured
+- Locust master host points to `http://backend:8089` but Django runs on port 8000
+
+---
+
+## References and Definitions (Optional)
+
+- **Django** — A high-level Python web framework that encourages rapid development and clean, pragmatic design
+- **Docker Compose** — A tool for defining and running multi-container Docker applications
+- **DRF (Django REST Framework)** — A powerful toolkit for building Web APIs in Django
+- **JWT (JSON Web Token)** — A compact, URL-safe means of representing claims to be transferred between two parties
+- **Celery** — A distributed task queue for Python
+- **OTP (One-Time Password)** — A password that is valid for only one login session or transaction
+- **RTL (Right-to-Left)** — A writing system where text starts from the right side of the page
+- **MVP (Minimum Viable Product)** — A version of a product with just enough features to be usable by early customers
+- **SRP / OCP / DIP** — SOLID design principles applied in the codebase
+
+---
+
+## License
+
+
 Private project.
 
 ---
@@ -592,4 +792,3 @@ Private project.
 ## Support / Contact
 
 For questions or support regarding this project, please contact the project maintainer.
-

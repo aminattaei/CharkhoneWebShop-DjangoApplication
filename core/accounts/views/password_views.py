@@ -1,26 +1,64 @@
-from django.contrib.auth import views as auth_views
-from django.urls import reverse_lazy
+from django.contrib import messages
+from django.shortcuts import redirect, render
+from django.views import View
 from django.views.generic import TemplateView
 
+from accounts.services.password_reset import request_password_reset, complete_password_reset
 
 
-class PasswordResetView(auth_views.PasswordResetView):
-    template_name = "accounts/passwod_reset.html"
-    email_template_name = "accounts/password_reset_email.html"
-    subject_template_name = "accounts/password_reset_subject.txt"
-    success_url = reverse_lazy("accounts:password_reset_done")
+class PasswordResetRequestView(View):
+    template_name = "accounts/password_reset_request.html"
+
+    def get(self, request):
+        return render(request, self.template_name)
+
+    def post(self, request):
+        email = request.POST.get("email", "").strip()
+        if not email:
+            messages.error(request, "لطفا ایمیل خود را وارد کنید.")
+            return render(request, self.template_name)
+
+        request_password_reset(email, request)
+        messages.success(request, "اگر ایمیل وجود داشته باشد، لینک بازیابی رمز عبور ارسال شده است.")
+        return redirect("accounts:password_reset_done")
 
 
-class PasswordResetDoneView(auth_views.PasswordResetDoneView):
+class PasswordResetConfirmView(View):
+    template_name = "accounts/password_reset_confirm_custom.html"
+
+    def get(self, request, token):
+        if not token:
+            messages.error(request, "توکن بازیابی نامعتبر است.")
+            return redirect("accounts:login")
+
+        return render(request, self.template_name, {"token": token})
+
+    def post(self, request, token):
+        password = request.POST.get("password", "")
+        confirm_password = request.POST.get("confirm_password", "")
+
+        if not password or not confirm_password:
+            messages.error(request, "لطفا تمام فیلدها را پر کنید.")
+            return render(request, self.template_name, {"token": token})
+
+        if password != confirm_password:
+            messages.error(request, "رمز عبور و تکرار آن مطابقت ندارند.")
+            return render(request, self.template_name, {"token": token})
+
+        result = complete_password_reset(token, password)
+        if result.ok:
+            messages.success(request, "رمز عبور شما با موفقیت تغییر کرد.")
+            return redirect("accounts:login")
+        else:
+            messages.error(request, result.detail)
+            return render(request, self.template_name, {"token": token})
+
+
+class PasswordResetDoneView(TemplateView):
     template_name = "accounts/password_reset_done.html"
 
 
-class PasswordResetConfirmView(auth_views.PasswordResetConfirmView):
-    template_name = "accounts/password_reset_confirm.html"
-    success_url = reverse_lazy("accounts:password_reset_complete")
-
-
-class PasswordResetCompleteView(auth_views.PasswordResetCompleteView):
+class PasswordResetCompleteView(TemplateView):
     template_name = "accounts/password_reset_complete.html"
 
 

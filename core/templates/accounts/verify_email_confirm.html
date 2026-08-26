@@ -1,0 +1,20 @@
+{% extends 'website/base.html' %}
+
+{% block title %}
+تایید حساب
+{% endblock title %}
+
+{% block content %}
+<div class="container content-space-3 content-space-t-lg-4 content-space-b-lg-3">
+  <div class="flex-grow-1 mx-auto" style="max-width: 28rem;">
+    <div class="text-center mb-5 mb-md-7">
+      <h1 class="h2">تایید حساب</h1>
+      <p>حساب شما با موفقیت تایید شد. حالا می‌توانید وارد شوید.</p>
+    </div>
+
+    <div class="d-grid mb-3">
+      <a class="btn btn-primary btn-lg" href="{% url 'accounts:login' %}">ورود به حساب</a>
+    </div>
+  </div>
+</div>
+{% endblock content %}
