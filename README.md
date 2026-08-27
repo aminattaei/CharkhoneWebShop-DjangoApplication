@@ -1,242 +1,48 @@
 # CharkhoneApplication-Django
 
-
-A modular Django e-commerce platform built with Django 5.2, Django REST Framework, and Docker. It provides a Persian RTL online shop with product catalog, user authentication, password reset via JWT-like tokens, and a complete admin interface.
-
-A modular Django e-commerce platform built with Django 5.2, Django REST Framework, and Docker. It provides a Persian RTL online shop with product catalog, user authentication, email verification, password reset via JWT-like tokens, and a complete admin interface.
-
+Charkhone Online Shop - A Django e-commerce project with Docker
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
-- [Demo](#demo)
-  - [Video Example](#video-example)
-  - [Image Example](#image-example)
-- [Requirements](#requirements)
-- [Configuration](#configuration)
+- [About](#about)
+- [Database Schema](#Database-Schema)
+- [Services](#services)
+- [Prerequisites](#prerequisites)
 - [Installation](#installation)
-- [Usage](#usage)
-  - [Lint and Reformat + Pre-commit (Optional)](#lint-and-reformat--pre-commit-optional)
-  - [Documentation](#documentation)
-  - [Testing (Optional)](#testing-optional)
 - [Project Structure](#project-structure)
-- [Architecture](#architecture)
-- [Deployment](#deployment)
-- [Known Issues](#known-issues)
-- [References and Definitions (Optional)](#references-and-definitions-optional)
-- [License](#license)
-- [Support / Contact](#support--contact)
+- [Password Reset](#Password-Reset)
+- [Environment Variables](#environment-variables)
+- [Features](#features)
+- [Useful Commands](#useful-commands)
+- [Development](#development)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
-## Overview
+## Database Schema
+<img src="./docs/db-diagram.png" style="width=700px;height=700px">
 
-### What is the project?
 
-CharkhoneApplication is a foundational e-commerce platform (MVP) built with Django 5.2 and a modular app architecture. It is containerized with Docker Compose and targets the Persian (Farsi) market with full RTL support, Persian fonts (Vazir), and localized date/number formatting.
+## About
 
-### What problem does it solve?
-
-It provides a production-ready starting point for online stores with:
-- Secure user authentication and password reset flows
-- Product catalog with categories, filtering, search, and pagination
-- Admin panel for managing products, categories, and users
-- Development tooling for email testing and debugging
-
-### Who is it for?
-
-- Persian-speaking developers looking for a Django e-commerce boilerplate
-- Teams needing a modular, service-oriented Django codebase
-- Projects requiring Docker-based development environments with PostgreSQL
+CharkhoneApplication is an online shop built with Django. The project uses Docker Compose to manage services including PostgreSQL, Django, and smtp4dev for email testing.
 
 ---
 
-## Features
+## Services
 
-
-- **Custom User Authentication** — Email-based login with `AbstractBaseUser`, user types (customer, admin, superuser), and profile management
-- **Password Reset via JWT-like Tokens** — 48-hour expiry, one-time use, rate limiting, account locking after failed attempts, and no email enumeration
-- **Product Catalog** — Slug-based product routing, categories, stock tracking, discount percentages, and final price calculation
-- **Product Filtering & Search** — Search by title, filter by price range and category, sort by price/date, with pagination
-- **Django Admin Integration** — Custom admin configurations for User, Profile, PasswordResetToken, ProductCategory, and ProductModel
-
-- **Custom User Authentication** — Email-based login with `AbstractBaseUser`, user types (customer, admin, superuser), profile management, and account verification
-- **Email Verification Flow** — JWT-based verification tokens with 12-hour expiry, auto-send on registration, request/resend verification pages, account deactivation until verified
-- **Password Reset via JWT-like Tokens** — 48-hour expiry, one-time use, rate limiting, account locking after failed attempts, and no email enumeration
-- **Product Catalog** — Slug-based product routing, categories, stock tracking, discount percentages, and final price calculation
-- **Product Filtering & Search** — Search by title, filter by price range and category, sort by price/date, with pagination
-- **Django Admin Integration** — Custom admin configurations for User, Profile, PasswordResetToken, EmailVerificationToken, ProductCategory, and ProductModel
-
-- **Django Debug Toolbar** — SQL queries, request/response inspection, template timing, and settings viewer (development only)
-- **Email Testing with smtp4dev** — Captures all outgoing emails locally at http://localhost:5000
-- **Celery + Redis** — Configured for asynchronous task processing (e.g., email sending)
-- **Django OTP** — TOTP and static token plugins installed for future two-factor authentication
-- **Persian Localization** — RTL layout, Vazir font, `intcomma` for Persian number formatting
-- **Load Testing with Locust** — Preconfigured Locust master/worker setup
-- **Test Data Generation** — Faker-based management commands for creating test categories and products in English or Persian
-- **Static Path Converter** — Utility script to convert hardcoded static paths to Django `{% static %}` tags
+| Service        | Version   | Ports                    | Description              |
+| -------------- | --------- | ------------------------ | ------------------------ |
+| **PostgreSQL** | 15-alpine | 5432                     | Primary database         |
+| **Django**     | 5.2.16    | 8000                     | Web application          |
+| **smtp4dev**   | v3        | 25 (SMTP), 5000 (Web UI) | Development email server |
 
 ---
 
-## Demo
-
-### Video Example
-
-[![Watch the video](https://img.youtube.com/vi/VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=VIDEO_ID)
-
-### Image Example
-
-![Database Schema](docs/db-diagram.png)
-
-![Password Reset Flow](docs/Reset_Password_Flow.png)
-
-![Django OTP Architecture](docs/Django-otp.png)
-
----
-
-## Requirements
-
-### Prerequisites
+## Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) (20.10+)
 - [Docker Compose](https://docs.docker.com/compose/install/) (2.0+)
-
-### Supported Versions
-
-- Python 3.11 (via `python:3.11-slim-bookworm` Docker image)
-- PostgreSQL 15-alpine
-- Django 5.2.16
-
-### Dependencies
-
-
-| Package                 | Version | Purpose                   |
-| ----------------------- | ------- | ------------------------- |
-| `django`                | 5.2.16  | Web framework             |
-| `djangorestframework`   | 3.17.1  | REST API framework        |
-| `psycopg[binary]`       | 3.1.12  | PostgreSQL adapter        |
-| `python-decouple`       | 3.8     | Environment variables     |
-| `pillow`                | 10.2.0  | Image processing          |
-| `django-debug-toolbar`  | 4.2.0   | Debug toolbar             |
-| `celery`                | 5.4.0   | Async task queue          |
-| `django-celery-results` | 2.5.1   | Celery result backend     |
-| `django-otp`            | 1.7.0   | OTP/TOTP support          |
-| `pytest`                | 9.1.1   | Test runner               |
-| `pytest-django`         | 4.14.0  | Django pytest integration |
-| `Faker`                 | 40.36.0 | Test data generation      |
-| `requests`              | 2.31.0  | HTTP client               |
-| `sqlparse`              | 0.4.4   | SQL parser                |
-
-| Package                 | Version | Purpose                   |
-| ----------------------- | ------- | ------------------------- |
-| `django`                | 5.2.16  | Web framework             |
-| `djangorestframework`   | 3.17.1  | REST API framework        |
-| `psycopg[binary]`       | 3.1.12  | PostgreSQL adapter        |
-| `python-decouple`       | 3.8     | Environment variables     |
-| `pillow`                | 10.2.0  | Image processing          |
-| `django-debug-toolbar`  | 4.2.0   | Debug toolbar             |
-| `celery`                | 5.4.0   | Async task queue          |
-| `django-celery-results` | 2.5.1   | Celery result backend     |
-| `django-otp`            | 1.7.0   | OTP/TOTP support          |
-| `pytest`                | 9.1.1   | Test runner               |
-| `pytest-django`         | 4.14.0  | Django pytest integration |
-| `Faker`                 | 40.36.0 | Test data generation      |
-| `requests`              | 2.31.0  | HTTP client               |
-| `sqlparse`              | 0.4.4   | SQL parser                |
-
-
-See `requirements.txt` and `core/requirements.txt` for the full pinned dependency list.
-
----
-
-## Configuration
-
-### Environment Variables
-
-The project uses `python-decouple` to load environment variables from `envs/dev/django/.env`. The sample file (`envs/dev/django/.env.sample`) is empty by default; create your `.env` with the following variables:
-
-#### Django
-
-
-| Variable               | Default               | Description                     |
-| ---------------------- | --------------------- | ------------------------------- |
-| `DJANGO_SECRET_KEY`    | *(required)*          | Django secret key               |
-| `DJANGO_DEBUG`         | `True`                | Enable debug mode               |
-| `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` | Allowed hosts (comma-separated) |
-| `TIME_ZONE`            | `UTC`                 | Timezone                        |
-
-#### PostgreSQL
-
-| Variable            | Default    | Description                         |
-| ------------------- | ---------- | ----------------------------------- |
-| `POSTGRES_DB`       | `postgres` | Database name                       |
-| `POSTGRES_USER`     | `postgres` | Database user                       |
-| `POSTGRES_PASSWORD` | `postgres` | Database password                   |
-| `POSTGRES_HOST`     | `db`       | Database host (Docker service name) |
-| `POSTGRES_PORT`     | `5432`     | Database port                       |
-
-#### Email (smtp4dev)
-
-| Variable        | Default    | Description |
-| --------------- | ---------- | ----------- |
-| `EMAIL_HOST`    | `smtp4dev` | SMTP host   |
-| `EMAIL_PORT`    | `25`       | SMTP port   |
-| `EMAIL_USE_TLS` | `False`    | Enable TLS  |
-
-#### Celery
-
-| Variable                | Default                    | Description      |
-| ----------------------- | -------------------------- | ---------------- |
-| `CELERY_BROKER_URL`     | `redis://localhost:6379/0` | Redis broker URL |
-| `CELERY_RESULT_BACKEND` | `django-db`                | Result backend   |
-
-| Variable               | Default               | Description                     |
-| ---------------------- | --------------------- | ------------------------------- |
-| `DJANGO_SECRET_KEY`    | *(required)*          | Django secret key               |
-| `DJANGO_DEBUG`         | `True`                | Enable debug mode               |
-| `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` | Allowed hosts (comma-separated) |
-| `TIME_ZONE`            | `UTC`                 | Timezone                        |
-
-#### PostgreSQL
-
-| Variable            | Default    | Description                         |
-| ------------------- | ---------- | ----------------------------------- |
-| `POSTGRES_DB`       | `postgres` | Database name                       |
-| `POSTGRES_USER`     | `postgres` | Database user                       |
-| `POSTGRES_PASSWORD` | `postgres` | Database password                   |
-| `POSTGRES_HOST`     | `db`       | Database host (Docker service name) |
-| `POSTGRES_PORT`     | `5432`     | Database port                       |
-
-#### Email (smtp4dev)
-
-| Variable        | Default    | Description |
-| --------------- | ---------- | ----------- |
-| `EMAIL_HOST`    | `smtp4dev` | SMTP host   |
-| `EMAIL_PORT`    | `25`       | SMTP port   |
-| `EMAIL_USE_TLS` | `False`    | Enable TLS  |
-
-#### Celery
-
-| Variable                | Default                    | Description      |
-| ----------------------- | -------------------------- | ---------------- |
-| `CELERY_BROKER_URL`     | `redis://localhost:6379/0` | Redis broker URL |
-| `CELERY_RESULT_BACKEND` | `django-db`                | Result backend   |
-
-> **Warning:** Never commit `.env` to version control. Change `DJANGO_SECRET_KEY` and database credentials for production.
-
-### Configuration Files
-
-- `docker-compose.yml` — Service definitions for db, backend, locust_master, locust_worker, and smtp4dev
-- `core/core/settings.py` — Django settings, middleware, installed apps, REST framework config
-- `core/core/.flake8` — Flake8 linting configuration (max line length 120)
-- `core/pytest.ini` — pytest configuration for Django test discovery
-
-### Optional Settings
-
-- `DJANGO_DEBUG=True` enables Django Debug Toolbar
-- `CELERY_BROKER_URL` can be pointed to a production Redis instance
-- `EMAIL_USE_TLS=True` for production SMTP servers
 
 ---
 
@@ -255,7 +61,23 @@ cd CharkhoneApplication-django
 cp envs/dev/django/.env.sample envs/dev/django/.env
 ```
 
-Edit `envs/dev/django/.env` with your settings (see [Configuration](#configuration) for all variables).
+Edit `envs/dev/django/.env` with your settings:
+
+```env
+DJANGO_SECRET_KEY="your-secret-key"
+DJANGO_DEBUG=True
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,[::1]
+
+POSTGRES_DB=postgres
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+
+TIME_ZONE=UTC
+```
+
+> **Warning:** Change `DJANGO_SECRET_KEY` and database credentials for production.
 
 ### 3. Start the project
 
@@ -270,7 +92,6 @@ docker-compose up --build
 | Django       | http://localhost:8000       |
 | Django Admin | http://localhost:8000/admin |
 | smtp4dev     | http://localhost:5000       |
-| Locust       | http://localhost:8089       |
 
 ### 5. Create admin user
 
@@ -284,378 +105,354 @@ docker exec -it charkhoneh-backend python manage.py createsuperuser
 docker exec -it charkhoneh-backend python manage.py migrate
 ```
 
-### 7. (Optional) Seed test data
-
-```bash
-# Create test categories
-docker exec -it charkhoneh-backend python manage.py create_test_categories
-
-# Create test products with images
-docker exec -it charkhoneh-backend python manage.py create_test_products
-```
-
----
-
-## Usage
-
-### Starting the project
-
-```bash
-docker-compose up --build
-```
-
-### Stopping the project
-
-```bash
-docker-compose down
-```
-
-To also remove volumes (database data):
-
-```bash
-docker-compose down -v
-```
-
-### Running external commands
-
-```bash
-# Django management commands
-docker exec -it charkhoneh-backend python manage.py <command>
-
-# PostgreSQL shell
-docker exec -it charkhoneh-db psql -U postgres
-
-# View logs
-docker-compose logs -f
-docker-compose logs -f backend
-```
-
-### Basic usage
-
-- Browse the shop at http://localhost:8000
-- Log in at http://localhost:8000/accounts/login/
-- Access the admin panel at http://localhost:8000/admin
-- Test password reset flow via the API at `/accounts/request-reset/` and `/accounts/reset-password/`
-- View captured emails at http://localhost:5000
-
-### Common workflows
-
-- **Add a product:** Use Django admin or create via API (extend `shop/api/v1/` if needed)
-- **Manage users:** Django admin or custom admin panel
-- **Debug SQL queries:** Enable `DJANGO_DEBUG=True` and use Django Debug Toolbar
-- **Monitor async tasks:** Configure Celery with a production Redis broker
-
----
-
-### Lint and Reformat + Pre-commit (Optional)
-
-The project includes a `.flake8` configuration at `core/core/.flake8` for code linting.
-
-```bash
-# Run flake8 (requires local Python environment, not inside Docker)
-flake8 core/
-```
-
-**Pre-commit hooks** are not currently configured. If you want to add them, create `.pre-commit-config.yaml` and install hooks with `pre-commit install`.
-
-### Documentation
-
-- **API Reference:** See `core/accounts/api/v1/urls.py` for DRF endpoints
-- **CLI Reference:** Django management commands in `core/accounts/management/commands/` and `core/shop/management/commands/`
-- **Additional Guides:**
-  - Password reset flow documented in the [Features](#features) section
-  - smtp4dev email testing guide in [Configuration](#configuration)
-
-### Testing (Optional)
-
-The project uses **pytest** with `pytest-django`.
-
-```bash
-# Run all tests
-docker exec -it charkhoneh-backend python manage.py test
-
-# Run specific app tests
-docker exec -it charkhoneh-backend python manage.py test accounts
-docker exec -it charkhoneh-backend python manage.py test shop
-
-# Run with pytest (if installed locally)
-pytest core/
-```
-
-**Test files:**
-- `core/accounts/tests/test_model.py` — User manager tests
-- `core/accounts/tests/test_password_reset.py` — Password reset API tests
-- `core/shop/tests/test_products.py` — Product tests (placeholder)
-
-**Test requirements:** `pytest`, `pytest-django`, `Faker` (listed in `core/requirements.txt`)
-
 ---
 
 ## Project Structure
 
 ```
 CharkhoneApplication-django/
-├── core/                              # Django project root (mounted to /usr/src/app in Docker)
-│   ├── core/                          # Project settings package
-│   │   ├── __init__.py
-│   │   ├── .flake8                    # Flake8 configuration
-│   │   ├── asgi.py                    # ASGI config
-│   │   ├── celery.py                  # Celery app configuration
-│   │   ├── settings.py                # Django settings
-│   │   ├── urls.py                    # Root URL configuration
-│   │   └── wsgi.py                    # WSGI config
-│   ├── accounts/                      # Authentication & user management app
-│   │   ├── __init__.py
-│   │   ├── admin.py                   # Custom admin configuration
-│   │   ├── apps.py
-│   │   ├── forms.py                   # Custom AuthenticationForm
-│   │   ├── models.py                  # User, Profile, PasswordResetToken
-│   │   ├── models.py                  # User, Profile, PasswordResetToken, EmailVerificationToken
-│   │   ├── throttles.py               # Rate limiting classes
-│   │   ├── tasks.py                   # Celery async tasks
-│   │   ├── urls.py                    # Account URL patterns
-│   │   ├── views/                     # Views package
-│   │   │   ├── __init__.py
-│   │   │   ├── account_views.py       # LoginView
-│   │   │   └── password_views.py      # Password reset views
-│   │   │   ├── password_views.py      # Password reset views
-│   │   │   └── verification_views.py  # Email verification views
-│   │   ├── api/v1/                    # DRF API endpoints
-│   │   │   ├── __init__.py
-│   │   │   ├── serializers.py
-│   │   │   ├── urls.py
-│   │   │   └── views.py
-│   │   ├── services/                  # Business logic layer
-│   │   │   ├── __init__.py
-│   │   │   ├── email.py
-│   │   │   ├── password_reset.py
-│   │   │   └── tokens.py
-│   │   │   ├── tokens.py
-│   │   │   └── verification.py
-│   │   ├── management/commands/       # Custom management commands
-│   │   │   ├── __init__.py
-│   │   │   └── cleanup_tokens.py
-│   │   ├── migrations/                # Database migrations
-│   │   └── tests/                     # Test suite
-│   │       ├── __init__.py
-│   │       ├── test_model.py
-│   │       └── test_password_reset.py
-│   ├── shop/                          # E-commerce product catalog app
-│   │   ├── __init__.py
-│   │   ├── admin.py
-│   │   ├── apps.py
-│   │   ├── filters.py                 # Search, price, category filters
-│   │   ├── managers.py                # ProductQuerySet with .published()
-│   │   ├── models.py                  # ProductCategory, ProductModel, ProductImageModel
-│   │   ├── services.py                # Price calculation utilities
+├── core/                          # Django project root
+│   ├── core/                      # Project settings
+│   │   ├── settings.py
 │   │   ├── urls.py
-│   │   ├── views.py                   # ProductListView, ProductDetailView
-│   │   ├── management/commands/       # Data seeding commands
-│   │   │   ├── __init__.py
-│   │   │   ├── check_database.py
-│   │   │   ├── create_test_categories.py
-│   │   │   └── create_test_products.py
-│   │   ├── migrations/                # Database migrations
-│   │   └── tests/                     # Test suite
-│   │       ├── __init__.py
-│   │       └── test_products.py
-│   ├── website/                       # Main website/pages app
-│   │   ├── __init__.py
-│   │   ├── admin.py
-│   │   ├── apps.py
-│   │   ├── models.py
-│   │   ├── urls.py
-│   │   ├── views.py                   # Index, About, Contact views
+│   │   └── wsgi.py
+│   ├── accounts/                  # Authentication app
+│   │   ├── models.py              # User, PasswordResetToken, Profile
+│   │   ├── views.py               # LoginView, RequestPasswordReset, ResetPassword
+│   │   ├── urls.py                # Account URL patterns
+│   │   ├── forms.py               # Custom AuthenticationForm
+│   │   ├── serializers.py         # DRF serializers
+│   │   ├── utils.py               # JWT token utilities
+│   │   ├── admin.py               # Custom admin configuration
+│   │   ├── management/
+│   │   │   └── commands/
+│   │   │       └── cleanup_expired_tokens.py
 │   │   └── tests/
-│   │       └── __init__.py
-│   ├── templates/                     # HTML templates
-│   │   ├── messages.html
-│   │   ├── accounts/                  # Auth templates
-│   │   │   ├── login.html
-│   │   │   ├── passwod_reset.html
-│   │   │   ├── password_reset_complete.html
-│   │   │   ├── password_reset_confirm.html
-│   │   │   ├── password_reset_done.html
-│   │   │   ├── password_reset_email.html
-│   │   │   └── reset_password_confirm.html
-│   │   │   ├── password_reset_confirm_custom.html
-│   │   │   ├── password_reset_done.html
-│   │   │   ├── password_reset_email.html
-│   │   │   ├── password_reset_request.html
-│   │   │   ├── password_reset_subject.txt
-│   │   │   ├── reset_password_confirm.html
-│   │   │   ├── verify_email.html
-│   │   │   ├── verify_email_confirm.html
-│   │   │   └── verify_email_sent.html
-│   │   ├── shop/
-│   │   │   ├── product-details.html
-│   │   │   └── product-grid.html
+│   │       └── test_model.py      # User and password reset tests
+│   ├── website/                   # Main app
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   ├── models.py
+│   │   └── admin.py
+│   ├── templates/                 # HTML templates
 │   │   └── website/
-│   │       ├── about.html
 │   │       ├── base.html
-│   │       ├── contact.html
-│   │       └── index.html
-│   ├── static/                        # Source static files
-│   │   ├── css/
-│   │   ├── fonts/vazir/               # Persian fonts
-│   │   ├── img/                       # Product images (various sizes)
-│   │   ├── js/
-│   │   └── svg/                       # Logos, brands, illustrations
-│   ├── staticfiles/                   # Collected static files (gitignored)
-│   ├── media/                         # User-uploaded media (gitignored)
-│   │   └── product/
-│   │       ├── images/
-│   │       └── extra-img/
-│   ├── locust/                        # Load testing
-│   │   └── locustfile.py
-│   ├── manage.py
-│   ├── pytest.ini
-│   ├── requirements.txt
-│   └── convert_static.py              # Static path converter utility
-├── dockerfiles/dev/django/
-│   └── Dockerfile                     # Python 3.11-slim-bookworm base
-├── envs/dev/django/
-│   ├── .env                           # Active environment file (gitignored)
-│   └── .env.sample                    # Empty sample
-├── postgres/
-│   └── data/                          # PostgreSQL volume (gitignored)
-├── docs/                              # Documentation assets
-│   ├── .gitkeep
-│   ├── db-diagram.drawio
-│   ├── db-diagram.png
-│   ├── Django-otp.png
-│   └── Reset_Password_Flow.png
+│   │       ├── index.html
+│   │       ├── about.html
+│   │       └── contact.html
+│   ├── static/                    # Static files (CSS, JS, images, fonts)
+│   ├── staticfiles/               # Collected static files
+│   └── manage.py
+├── dockerfiles/dev/django/        # Dockerfile
+├── envs/dev/django/               # Environment variables
+├── postgres/data/                 # Database files (gitignored)
+├── docs/                          # Documentation
 ├── docker-compose.yml
 ├── requirements.txt
-├── convert_static.py
-├── .gitignore
-└── README.md
+└── convert_static.py              # Static path converter utility
 ```
 
 ---
 
-## Architecture
 
-### High-level design
 
-The project follows a **modular Django app architecture** with clear separation of concerns:
+## Environment Variables
 
-- **Core project** (`core/core/`) — Settings, URL routing, WSGI/ASGI configuration
-- **Apps** — `accounts`, `shop`, `website` are independent Django apps with their own models, views, URLs, and tests
-- **Service layer** — Business logic is extracted into `services/` modules within apps (e.g., `accounts/services/`)
-- **API layer** — DRF endpoints are organized under `api/v1/` for versioning
-- **Containerization** — Docker Compose orchestrates PostgreSQL, Django, Celery broker (Redis), smtp4dev, and Locust
+### Django
 
-### Components
+| Variable               | Default               | Description                     |
+| ---------------------- | --------------------- | ------------------------------- |
+| `DJANGO_SECRET_KEY`    | -                     | Required. Django secret key     |
+| `DJANGO_DEBUG`         | `False`               | Enable debug mode               |
+| `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` | Allowed hosts (comma-separated) |
 
-| Component       | Location                          | Responsibility                              |
-| --------------- | --------------------------------- | ------------------------------------------- |
-| **Website**     | `core/website/`                   | Static pages (home, about, contact)         |
-| **Accounts**    | `core/accounts/`                  | Auth, password reset, user management       |
-| **Shop**        | `core/shop/`                      | Product catalog, categories, filtering      |
-| **Core**        | `core/core/`                      | Settings, middleware, URL config            |
-| **PostgreSQL**  | Docker service `db`               | Primary database                            |
-| **smtp4dev**    | Docker service `smtp4dev`         | Development email server                    |
-| **Locust**      | Docker services `locust_*`        | Load testing                                |
-| Component       | Location                          | Responsibility                              |
-| --------------- | --------------------------------- | ------------------------------------------- |
-| **Website**     | `core/website/`                   | Static pages (home, about, contact)         |
-| **Accounts**    | `core/accounts/`                  | Auth, password reset, user management       |
-| **Shop**        | `core/shop/`                      | Product catalog, categories, filtering      |
-| **Core**        | `core/core/`                      | Settings, middleware, URL config            |
-| **PostgreSQL**  | Docker service `db`               | Primary database                            |
-| **smtp4dev**    | Docker service `smtp4dev`         | Development email server                    |
-| **Locust**      | Docker services `locust_*`        | Load testing                                |
+### PostgreSQL
 
-### Data flow
+| Variable            | Default    | Description                         |
+| ------------------- | ---------- | ----------------------------------- |
+| `POSTGRES_DB`       | `postgres` | Database name                       |
+| `POSTGRES_USER`     | `postgres` | Database user                       |
+| `POSTGRES_PASSWORD` | `postgres` | Database password                   |
+| `POSTGRES_HOST`     | `db`       | Database host (Docker service name) |
+| `POSTGRES_PORT`     | `5432`     | Database port                       |
 
-1. **Request** → Django URL router (`core/urls.py`) → App-level URL (`accounts/urls.py`, `shop/urls.py`, `website/urls.py`)
-2. **View** → Template rendering (server-side) or DRF serializer (API)
-3. **Business logic** → Service layer (`services/`) if applicable
-4. **Database** → Django ORM → PostgreSQL
-5. **Async tasks** → Celery broker (Redis) → Worker execution
+### Other
 
-### Design patterns applied
-
-- **SRP (Single Responsibility Principle)** — Services separated from views
-- **OCP (Open/Closed Principle)** — Strategy-based filters in shop (`filters.py`)
-- **DIP (Dependency Inversion Principle)** — Email source abstracted in accounts services
+| Variable    | Default | Description |
+| ----------- | ------- | ----------- |
+| `TIME_ZONE` | `UTC`   | Timezone    |
 
 ---
 
+## Features
 
-## Deployment
+### Password Reset
 
-### Production setup
+A complete password reset flow using JWT tokens with 48-hour expiry.
 
-The current configuration is optimized for local development with Docker. For production:
 
-1. **Environment variables** — Set `DJANGO_DEBUG=False`, strong `DJANGO_SECRET_KEY`, production database credentials, and a real SMTP server
-2. **Static files** — Run `python manage.py collectstatic` and serve via Nginx or a CDN
-3. **Database** — Use a managed PostgreSQL service or persistent volume backups
-4. **Celery** — Deploy Redis and Celery workers as separate services
-5. **Gunicorn/Uvicorn** — Replace `runserver` with a production ASGI/WSGI server
+<img src="./docs/Reset_Password_Flow.png">
 
-### Deployment instructions
+---
+
+#### How it works
+
+1. **Request reset** - User sends their email to `/accounts/request-reset/`
+2. **Email sent** - A JWT token is generated and sent via email (viewable in smtp4dev at http://localhost:5000)
+3. **Reset password** - User clicks the link and submits a new password with the token to `/accounts/reset-password/`
+
+#### API Endpoints
+
+| Endpoint                    | Method | Description               |
+| --------------------------- | ------ | ------------------------- |
+| `/accounts/request-reset/`  | POST   | Send reset email          |
+| `/accounts/reset-password/` | POST   | Reset password with token |
+
+#### Request Reset
 
 ```bash
-# Build production image
-docker build -t charkhone-backend ./dockerfiles/dev/django
-
-# Run with production environment
-docker run -p 8000:8000 \
-  -e DJANGO_SECRET_KEY=prod-secret \
-  -e DJANGO_DEBUG=False \
-  -e POSTGRES_HOST=your-db-host \
-  charkhone-backend
+curl -X POST http://localhost:8000/accounts/request-reset/ \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com"}'
 ```
 
-### CI/CD
+Response:
+```json
+{"message": "در صورت وجود ایمیل، لینک بازیابی ارسال شد."}
+```
 
-No CI/CD pipeline is currently configured. Future additions could include:
-- GitHub Actions / GitLab CI for automated testing
-- Docker image building and pushing to a registry
-- Automated migrations on deployment
+#### Reset Password
+
+```bash
+curl -X POST http://localhost:8000/accounts/reset-password/ \
+  -H "Content-Type: application/json" \
+  -d '{"token": "<jwt-token>", "new_password": "NewP@ssw0rd123"}'
+```
+
+Response:
+```json
+{"message": "رمز عبور با موفقیت تغییر یافت."}
+```
+
+#### Security Features
+
+- **JWT Token** - Tokens are signed with Django's `SECRET_KEY` using HS256 algorithm
+- **48-hour expiry** - Tokens expire after 48 hours
+- **One-time use** - Tokens are marked as used after successful password reset
+- **Rate limiting** - 3 requests per hour via `ScopedRateThrottle`
+- **Password validation** - Uses Django's built-in password validators
+- **No email enumeration** - Same response regardless of whether the email exists
+- **Token cleanup** - Expired tokens are cleaned up on user login
+
+#### Token Cleanup
+
+```bash
+# Manual cleanup of expired tokens
+docker exec -it charkhoneh-backend python manage.py cleanup_expired_tokens
+```
+
+#### Testing
+
+```bash
+# Run all tests including password reset tests
+docker exec -it charkhoneh-backend python manage.py test accounts
+```
 
 ---
 
-## Known Issues
+### Django Debug Toolbar
 
-### Limitations
+Debug toolbar is integrated for development debugging and performance analysis.
 
-- **No payment gateway integration** — The project is an MVP without checkout or payment processing
-- **No inventory management** beyond basic `stock` field on `ProductModel`
-- **Django OTP installed but unused** — TOTP/static token plugins are in `INSTALLED_APPS` but not wired into views
-- **Celery broker not containerized** — Redis is expected at `localhost:6379` but is not defined in `docker-compose.yml`
-- **No CI/CD** — Manual testing and deployment only
-- **`.env.sample` is empty** — Does not document required environment variables
-- **Persian-only frontend** — No i18n/l10n framework for multi-language support
+#### Access
 
-### Current problems
+When `DJANGO_DEBUG=True`, the debug toolbar appears on the right side of every page at http://localhost:8000.
 
-- Typo in template filename: `passwod_reset.html` (missing `r`)
-- `django-rest-framework` version shows `0.1.0` in `requirements.txt` (likely a packaging metadata issue; DRF itself is versioned separately)
-- No production ASGI/WSGI server configured
-- Locust master host points to `http://backend:8089` but Django runs on port 8000
+#### Features
+
+- **SQL Panel** - View all database queries with timing
+- **Request/Response** - Inspect headers, cookies, session data
+- **Templates** - View template rendering times
+- **Static Files** - Check static file serving
+- **Cache** - Monitor cache usage
+- **Settings** - View all Django settings
+- **Logging** - View log messages
+
+#### Configuration
+
+Debug toolbar is configured in `settings.py`:
+
+```python
+# Only active when DEBUG=True
+INSTALLED_APPS = [
+    ...
+    'debug_toolbar',
+]
+
+MIDDLEWARE = [
+    ...
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
+]
+
+# Auto-detects IP for Docker environments
+INTERNAL_IPS = [ip, '127.0.0.1', '10.0.2.2']
+```
+
+> **Note:** Debug toolbar is only visible when `DJANGO_DEBUG=True`. Never enable debug mode in production.
 
 ---
 
-## References and Definitions (Optional)
+## Useful Commands
 
-- **Django** — A high-level Python web framework that encourages rapid development and clean, pragmatic design
-- **Docker Compose** — A tool for defining and running multi-container Docker applications
-- **DRF (Django REST Framework)** — A powerful toolkit for building Web APIs in Django
-- **JWT (JSON Web Token)** — A compact, URL-safe means of representing claims to be transferred between two parties
-- **Celery** — A distributed task queue for Python
-- **OTP (One-Time Password)** — A password that is valid for only one login session or transaction
-- **RTL (Right-to-Left)** — A writing system where text starts from the right side of the page
-- **MVP (Minimum Viable Product)** — A version of a product with just enough features to be usable by early customers
-- **SRP / OCP / DIP** — SOLID design principles applied in the codebase
+### Docker
+
+```bash
+docker-compose up                    # Start services
+docker-compose up -d                 # Start in background
+docker-compose down                  # Stop services
+docker-compose up --build            # Rebuild and start
+docker-compose logs -f               # View logs
+docker-compose logs -f backend       # View specific service logs
+```
+
+### Django Management
+
+```bash
+# Run manage.py commands
+docker exec -it charkhoneh-backend python manage.py <command>
+
+# Create superuser
+docker exec -it charkhoneh-backend python manage.py createsuperuser
+
+# Run migrations
+docker exec -it charkhoneh-backend python manage.py migrate
+
+# Collect static files
+docker exec -it charkhoneh-backend python manage.py collectstatic
+
+# Cleanup expired password reset tokens
+docker exec -it charkhoneh-backend python manage.py cleanup_expired_tokens
+
+# Run tests
+docker exec -it charkhoneh-backend python manage.py test accounts
+
+# Django shell
+docker exec -it charkhoneh-backend python manage.py shell
+```
+
+### Database
+
+```bash
+# Access PostgreSQL shell
+docker exec -it charkhoneh-db psql -U postgres
+```
+
+---
+
+## Development
+
+### Static Path Converter
+
+The `convert_static.py` script converts hardcoded static paths in HTML files to Django `{% static %}` tags:
+
+```bash
+# Convert all templates
+python convert_static.py --dir core/templates
+
+# Dry run (preview changes without modifying)
+python convert_static.py --dir core/templates --dry-run
+
+# Create backups before modifying
+python convert_static.py --dir core/templates --backup
+```
+
+### smtp4dev (Email Testing)
+
+smtp4dev captures all outgoing emails during development:
+
+- **Web UI:** http://localhost:5000
+- **SMTP Server:** localhost:25
+
+Configure Django to use smtp4dev:
+
+```python
+# settings.py
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp4dev'
+EMAIL_PORT = 25
+EMAIL_USE_TLS = False
+```
+
+### Persian Fonts
+
+The project includes two Persian fonts:
+- **Vazir** - Primary font
+- **IRANSans** - Alternative font
+
+---
+
+## Dependencies
+
+| Package                       | Version | Purpose               |
+| ----------------------------- | ------- | --------------------- |
+| django                        | 5.2.16  | Web framework         |
+| psycopg[binary]               | 3.1.12  | PostgreSQL adapter    |
+| python-decouple               | 3.8     | Environment variables |
+| pillow                        | 10.2.0  | Image processing      |
+| django-debug-toolbar          | 4.2.0   | Debug toolbar         |
+| django-rest-framework         | -       | REST API framework    |
+| djangorestframework-simplejwt | -       | JWT authentication    |
+| requests                      | 2.31.0  | HTTP client           |
+| sqlparse                      | 0.4.4   | SQL parser            |
+
+---
+
+## Available Routes
+
+| Path                        | Method | Name             | Description                  |
+| --------------------------- | ------ | ---------------- | ---------------------------- |
+| `/`                         | GET    | `home_page`      | Home page                    |
+| `/about/`                   | GET    | `about_page`     | About page                   |
+| `/contact/`                 | GET    | `contact_page`   | Contact page                 |
+| `/admin/`                   | GET    | -                | Django admin panel           |
+| `/accounts/login/`          | GET    | `login`          | Login page                   |
+| `/accounts/logout/`         | GET    | `logout`         | Logout                       |
+| `/accounts/request-reset/`  | POST   | `request-reset`  | Request password reset email |
+| `/accounts/reset-password/` | POST   | `reset-password` | Reset password with token    |
+
+---
+
+## Troubleshooting
+
+### Database Connection Error
+
+Ensure the `db` service is running:
+
+```bash
+docker-compose ps
+docker-compose logs db
+```
+
+### Port Already in Use
+
+Change the port mapping in `docker-compose.yml`:
+
+```yaml
+ports:
+  - '8001:8000'  # Use port 8001 instead
+```
+
+### Reset Database
+
+```bash
+docker-compose down -v
+rm -rf postgres/data/*
+docker-compose up --build
+```
 
 ---
 
 ## MIT License
-
 
 Copyright (c) 2026 Amin Attaei
 
@@ -673,122 +470,3 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-
-## Completed Tasks
-
-### Email Verification Implementation
-
-- Added `EmailVerificationToken` model with 12-hour JWT expiry and one-time use
-- Added `deactivated_at` field to `User` model for tracking deactivated accounts
-- Created verification service layer (`core/accounts/services/verification.py`) with token generation, verification, and email sending
-- Implemented views: `RequestVerificationView`, `ConfirmVerificationView`, `ResendVerificationView`
-- Added templates: `verify_email.html`, `verify_email_sent.html`, `verify_email_confirm.html`
-- Auto-send verification email on user creation via Django signal
-- URL patterns: `/accounts/verify-email/`, `/accounts/verify-email/sent/`, `/accounts/verify-email/confirm/`
-- Unverified users cannot log in (`AuthenticationForm.confirm_login_allowed`)
-
-### Password Reset Flow Rewrite
-
-- Replaced Django built-in auth views with custom `PasswordResetRequestView` and `PasswordResetConfirmView`
-- Password reset tokens use JWT-like signing with 48-hour expiry
-- Added `PasswordResetDoneView` and `PasswordResetCompleteView` for success pages
-- Custom templates: `password_reset_request.html`, `password_reset_confirm_custom.html`, `password_reset_done.html`, `password_reset_complete.html`
-- URL patterns: `/accounts/password_reset/`, `/accounts/password_reset/done/`, `/accounts/reset/<token>/`, `/accounts/reset/done/`
-
----
-
-## Bug Fixes
-
-- Fixed URL pattern mismatch for email verification (query string token vs path parameter)
-- Fixed password reset link pointing to wrong URL (`/accounts/reset-password/` → `/accounts/reset/<token>/`)
-- Enabled `is_verified` check in login form to prevent unverified users from logging in
-- Added GET handler to `ResendVerificationView` to fix 405 Method Not Allowed
-- Made email sending safe for users without a profile (`getattr` fallback instead of direct attribute access)
-- Replaced `datetime.now()` with `timezone.now()` for timezone-aware token timestamps
-- Increased timestamp precision from seconds to microseconds to prevent token collisions
-- Improved logging in token verification and invalidation functions
-- Removed unused imports (`reverse_lazy`, `timezone`) from verification views
-- Fixed missing newline at end of `core/accounts/services/tokens.py`
-
----
-
-## Deployment
-
-### Production setup
-
-The current configuration is optimized for local development with Docker. For production:
-
-1. **Environment variables** — Set `DJANGO_DEBUG=False`, strong `DJANGO_SECRET_KEY`, production database credentials, and a real SMTP server
-2. **Static files** — Run `python manage.py collectstatic` and serve via Nginx or a CDN
-3. **Database** — Use a managed PostgreSQL service or persistent volume backups
-4. **Celery** — Deploy Redis and Celery workers as separate services
-5. **Gunicorn/Uvicorn** — Replace `runserver` with a production ASGI/WSGI server
-
-### Deployment instructions
-
-```bash
-# Build production image
-docker build -t charkhone-backend ./dockerfiles/dev/django
-
-# Run with production environment
-docker run -p 8000:8000 \
-  -e DJANGO_SECRET_KEY=prod-secret \
-  -e DJANGO_DEBUG=False \
-  -e POSTGRES_HOST=your-db-host \
-  charkhone-backend
-```
-
-### CI/CD
-
-No CI/CD pipeline is currently configured. Future additions could include:
-- GitHub Actions / GitLab CI for automated testing
-- Docker image building and pushing to a registry
-- Automated migrations on deployment
-
----
-
-## Known Issues
-
-### Limitations
-
-- **No payment gateway integration** — The project is an MVP without checkout or payment processing
-- **No inventory management** beyond basic `stock` field on `ProductModel`
-- **Django OTP installed but unused** — TOTP/static token plugins are in `INSTALLED_APPS` but not wired into views
-- **Celery broker not containerized** — Redis is expected at `localhost:6379` but is not defined in `docker-compose.yml`
-- **No CI/CD** — Manual testing and deployment only
-- **`.env.sample` is empty** — Does not document required environment variables
-- **Persian-only frontend** — No i18n/l10n framework for multi-language support
-
-### Current problems
-
-- Typo in template filename: `passwod_reset.html` (missing `r`)
-- `django-rest-framework` version shows `0.1.0` in `requirements.txt` (likely a packaging metadata issue; DRF itself is versioned separately)
-- No production ASGI/WSGI server configured
-- Locust master host points to `http://backend:8089` but Django runs on port 8000
-
----
-
-## References and Definitions (Optional)
-
-- **Django** — A high-level Python web framework that encourages rapid development and clean, pragmatic design
-- **Docker Compose** — A tool for defining and running multi-container Docker applications
-- **DRF (Django REST Framework)** — A powerful toolkit for building Web APIs in Django
-- **JWT (JSON Web Token)** — A compact, URL-safe means of representing claims to be transferred between two parties
-- **Celery** — A distributed task queue for Python
-- **OTP (One-Time Password)** — A password that is valid for only one login session or transaction
-- **RTL (Right-to-Left)** — A writing system where text starts from the right side of the page
-- **MVP (Minimum Viable Product)** — A version of a product with just enough features to be usable by early customers
-- **SRP / OCP / DIP** — SOLID design principles applied in the codebase
-
----
-
-## License
-
-
-Private project.
-
----
-
-## Support / Contact
-
-For questions or support regarding this project, please contact the project maintainer.

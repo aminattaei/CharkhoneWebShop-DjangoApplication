@@ -1,21 +1,22 @@
 import logging
-
 from celery import shared_task
-from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
+from django.conf import settings
 
-from accounts.services.email import send_password_reset_email
-
-User = get_user_model()
 logger = logging.getLogger(__name__)
 
 
 @shared_task(bind=True, max_retries=3)
-def send_reset_email_task(self, user_id, reset_link):
+def send_reset_email_task(self, email, reset_link):
     try:
-        user = User.objects.select_related("profile").get(id=user_id)
-        send_password_reset_email(user, reset_link)
-    except User.DoesNotExist:
-        logger.error("کاربر با شناسه %s یافت نشد.", user_id)
+        send_mail(
+            subject="بازیابی رمز عبور",
+            message=f"برای بازیابی رمز عبور خود روی لینک زیر کلیک کنید:\n\n{reset_link}\n\nاین لینک تا ۴۸ ساعت معتبر است.",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            fail_silently=False,
+        )
+        logger.info("ایمیل بازیابی رمز عبور با موفقیت به %s ارسال شد.", email)
     except Exception as exc:
-        logger.error("خطا در ارسال ایمیل به کاربر %s: %s", user_id, exc)
+        logger.error("خطا در ارسال ایمیل به %s: %s", email, exc)
         self.retry(exc=exc, countdown=60)

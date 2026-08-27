@@ -5,7 +5,7 @@ from accounts.models import PasswordResetToken
 
 
 class Command(BaseCommand):
-    help = "Delete refresh tokens to expired password"
+    help = "حذف توکن‌های بازیابی رمز عبور منقضی‌شده"
 
     def handle(self, *args, **options):
         now = timezone.now()

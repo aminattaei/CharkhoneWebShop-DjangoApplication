@@ -5,7 +5,7 @@ from django.test import TestCase
 class UsersManagersTests(TestCase):
     def test_create_user(self):
         User = get_user_model()
-        user = User.objects.create_user(email="normal@user.com", password="a/@1234567") #type: ignore
+        user = User.objects.create_user(username = None,email="normal@user.com", password="a/@1234567") #type: ignore
         self.assertEqual(user.email, "normal@user.com")
         self.assertTrue(user.is_active)
         self.assertFalse(user.is_staff)
