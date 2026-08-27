@@ -9,6 +9,9 @@ app_name = "shop"
 
 urlpatterns = [
     path("", views.ProductListView.as_view(), name="product_list"),
-    re_path(r'^product/(?P<slug>[\w\-]+)/$',views.ProductDetailView.as_view(), name='product_detail'),
-    
+    re_path(
+        r"^product/(?P<slug>[\w\-]+)/$",
+        views.ProductDetailView.as_view(),
+        name="product_detail",
+    ),
 ]

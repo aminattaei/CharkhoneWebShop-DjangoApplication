@@ -2,8 +2,16 @@ from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.views import View
 from django.views.generic import TemplateView
+from django.core.cache import cache
 
-from accounts.services.password_reset import request_password_reset, complete_password_reset
+from accounts.services.password_reset import (
+    request_password_reset,
+    complete_password_reset,
+)
+
+RESET_RATE_LIMIT_KEY = "password_reset_rate_limit_{email}"
+RESET_RATE_LIMIT_MAX = 3
+RESET_RATE_LIMIT_DURATION = 3600
 
 
 class PasswordResetRequestView(View):
@@ -18,8 +26,23 @@ class PasswordResetRequestView(View):
             messages.error(request, "لطفا ایمیل خود را وارد کنید.")
             return render(request, self.template_name)
 
+        cache_key = RESET_RATE_LIMIT_KEY.format(email=email.lower())
+        current_count = cache.get(cache_key, 0)
+
+        if current_count >= RESET_RATE_LIMIT_MAX:
+            messages.error(
+                request,
+                "تعداد درخواست‌های بازیابی رمز عبور بیش از حد مجاز است. "
+                "لطفا بعداً تلاش کنید.",
+            )
+            return render(request, self.template_name)
+
         request_password_reset(email, request)
-        messages.success(request, "اگر ایمیل وجود داشته باشد، لینک بازیابی رمز عبور ارسال شده است.")
+        cache.set(cache_key, current_count + 1, RESET_RATE_LIMIT_DURATION)
+        messages.success(
+            request,
+            "اگر ایمیل وجود داشته باشد، لینک بازیابی رمز عبور ارسال شده است.",
+        )
         return redirect("accounts:password_reset_done")
 
 

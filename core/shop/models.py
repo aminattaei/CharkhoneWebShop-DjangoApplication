@@ -44,7 +44,7 @@ class ProductModel(models.Model):
         related_name="products",
     )
     title = models.CharField(max_length=255)
-    slug = models.SlugField(allow_unicode=True, unique=True, max_length=255) 
+    slug = models.SlugField(allow_unicode=True, unique=True, max_length=255)
     image = models.ImageField(
         default="defaults/default_image.png",
         upload_to="product/img/",
@@ -56,7 +56,7 @@ class ProductModel(models.Model):
         choices=ProductStatusType.choices,
         default=ProductStatusType.publish,
     )
-    price = models.DecimalField(max_digits=15, decimal_places=0, default = None)
+    price = models.DecimalField(max_digits=15, decimal_places=0, default=None)
     discount_percent = models.PositiveSmallIntegerField(
         default=0,
         validators=[MinValueValidator(0), MaxValueValidator(100)],

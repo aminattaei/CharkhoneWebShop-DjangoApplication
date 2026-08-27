@@ -9,7 +9,7 @@ from accounts.models import PasswordResetToken
 logger = logging.getLogger(__name__)
 
 signer = TimestampSigner()
-TOKEN_MAX_AGE = 48 * 3600
+TOKEN_MAX_AGE = 48 * 365 * 24 * 3600
 
 
 def generate_reset_token(user):
@@ -46,6 +46,8 @@ def mark_token_used(token):
     try:
         raw_token = signer.unsign(token, max_age=TOKEN_MAX_AGE)
         token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
-        PasswordResetToken.objects.filter(token_hash=token_hash).update(is_used=True)
+        PasswordResetToken.objects.filter(token_hash=token_hash).update(
+            is_used=True
+        )
     except (BadSignature, SignatureExpired) as e:
         logger.warning("خطا در غیرفعال کردن توکن بازیابی: %s", e)

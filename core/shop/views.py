@@ -41,7 +41,7 @@ class ProductDetailView(generic.DetailView):
         slug = self.kwargs.get('slug')
         if slug is None:
             raise Http404("محصول یافت نشد")
-        
+
         return get_object_or_404(
             ProductModel.objects.prefetch_related("product_images"),
             slug=slug
