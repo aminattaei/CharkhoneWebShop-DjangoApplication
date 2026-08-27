@@ -9,30 +9,22 @@ logger = logging.getLogger(__name__)
 def build_password_reset_link(request, token):
     protocol = "https" if request.is_secure() else "http"
     domain = request.get_host()
-
-    return f"{protocol}://{domain}/accounts/reset-password/?token={token}"
-
     return f"{protocol}://{domain}/accounts/reset/{token}/"
-
 
 
 def send_password_reset_email(user, reset_link):
     email = user.email
-
-
     profile = getattr(user, "profile", None)
     name = profile.first_name if profile and profile.first_name else email
     try:
         send_mail(
             subject="بازیابی رمز عبور",
             message=(
-
-                f"سلام {user.profile.first_name or user.email},\n\n"
-
                 f"سلام {name},\n\n"
                 f"برای بازیابی رمز عبور خود روی لینک زیر کلیک کنید:\n\n"
                 f"{reset_link}\n\n"
-                f"اگر شما درخواست بازیابی رمز نداده‌اید، این ایمیل را نادیده بگیرید."
+                f"اگر شما درخواست بازیابی رمز نداده‌اید، "
+                f"این ایمیل را نادیده بگیرید."
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[email],

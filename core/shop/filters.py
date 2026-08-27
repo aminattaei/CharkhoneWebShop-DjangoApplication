@@ -2,7 +2,7 @@ from django.db.models import Q
 
 
 class ProductFilter:
-    param: str = None
+    param: str
 
     def apply(self, queryset, params):
         value = params.get(self.param, "").strip()
