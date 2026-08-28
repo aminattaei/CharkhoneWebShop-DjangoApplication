@@ -1,11 +1,16 @@
 from django.shortcuts import render
 from django.views import generic
 
+from shop.models import ProductModel
+
 # Create your views here.
 
 
-class IndexTemplateView(generic.TemplateView):
+class IndexShowView(generic.ListView):
     template_name = "website/index.html"
+    queryset =  ProductModel.objects.published()[:5] #type: ignore
+    context_object_name = "products"
+
 
 
 class ContactTemplateView(generic.TemplateView):
