@@ -8,9 +8,8 @@ from shop.models import ProductModel
 
 class IndexShowView(generic.ListView):
     template_name = "website/index.html"
-    queryset =  ProductModel.objects.published()[:5] #type: ignore
+    queryset =  ProductModel.objects.published()[:4] #type: ignore
     context_object_name = "products"
-
 
 
 class ContactTemplateView(generic.TemplateView):
