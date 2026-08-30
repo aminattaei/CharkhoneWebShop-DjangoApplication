@@ -9,7 +9,7 @@ from accounts.models import PasswordResetToken
 logger = logging.getLogger(__name__)
 
 signer = TimestampSigner()
-TOKEN_MAX_AGE = 48 * 365 * 24 * 3600
+TOKEN_MAX_AGE = 48 * 3600
 
 
 def generate_reset_token(user):

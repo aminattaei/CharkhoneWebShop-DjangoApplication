@@ -27,19 +27,12 @@ class RequestVerificationView(View):
             messages.error(request, "لطفا ایمیل خود را وارد کنید.")
             return render(request, self.template_name)
 
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            messages.error(request, "ایمیل وارد شده معتبر نیست.")
-            return render(request, self.template_name)
+        user = User.objects.filter(email=email).first()
+        if user and not user.is_verified:
+            token = build_verification_link(request, generate_verification_token(user))
+            send_verification_email(user, token)
 
-        if user.is_verified:
-            messages.info(request, "حساب شما قبلاً تایید شده است.")
-            return redirect("accounts:login")
-
-        token = build_verification_link(request, generate_verification_token(user))
-        send_verification_email(user, token)
-        messages.success(request, "ایمیل تایید ارسال شد.")
+        messages.success(request, "اگر ایمیل وجود داشته باشد، لینک تایید ارسال شده است.")
         return redirect("accounts:verify_email_sent")
 
 
@@ -92,17 +85,10 @@ class ResendVerificationView(View):
             messages.error(request, "لطفا ایمیل خود را وارد کنید.")
             return render(request, self.template_name)
 
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            messages.error(request, "ایمیل وارد شده معتبر نیست.")
-            return render(request, self.template_name)
+        user = User.objects.filter(email=email).first()
+        if user and not user.is_verified:
+            token = build_verification_link(request, generate_verification_token(user))
+            send_verification_email(user, token)
 
-        if user.is_verified:
-            messages.info(request, "حساب شما قبلاً تایید شده است.")
-            return redirect("accounts:login")
-
-        token = build_verification_link(request, generate_verification_token(user))
-        send_verification_email(user, token)
-        messages.success(request, "ایمیل تایید مجددا ارسال شد.")
+        messages.success(request, "اگر ایمیل وجود داشته باشد، لینک تایید مجددا ارسال شده است.")
         return redirect("accounts:verify_email_sent")

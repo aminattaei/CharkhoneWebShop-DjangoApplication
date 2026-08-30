@@ -4,7 +4,7 @@ from django.db.models.signals import post_save
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.db import models
+from django.db import models, transaction
 from django.core.validators import RegexValidator
 from django.utils import timezone
 
@@ -111,12 +111,13 @@ class PasswordResetToken(models.Model):
     def create_token(cls, user, raw_token):
         token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
         expires_at = timezone.now() + timezone.timedelta(hours=48)
-        cls.objects.filter(user=user, is_used=False).update(is_used=True)
-        return cls.objects.create(
-            user=user,
-            token_hash=token_hash,
-            expires_at=expires_at,
-        )
+        with transaction.atomic():
+            cls.objects.select_for_update().filter(user=user, is_used=False).update(is_used=True)
+            return cls.objects.create(
+                user=user,
+                token_hash=token_hash,
+                expires_at=expires_at,
+            )
 
     def __str__(self):
         return f"ResetToken for {self.user.email}"
@@ -136,12 +137,13 @@ class EmailVerificationToken(models.Model):
     def create_token(cls, user, raw_token):
         token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
         expires_at = timezone.now() + timezone.timedelta(hours=12)
-        cls.objects.filter(user=user, is_used=False).update(is_used=True)
-        return cls.objects.create(
-            user=user,
-            token_hash=token_hash,
-            expires_at=expires_at,
-        )
+        with transaction.atomic():
+            cls.objects.select_for_update().filter(user=user, is_used=False).update(is_used=True)
+            return cls.objects.create(
+                user=user,
+                token_hash=token_hash,
+                expires_at=expires_at,
+            )
 
     def __str__(self):
         return f"VerificationToken for {self.user.email}"

@@ -1,7 +1,8 @@
 {% extends 'website/base.html' %}
 {% load static %}
-{% load humanize %}
 {% load shop_tags %}
+
+{% load humanize %}
 
 
 {% block title %} فروشگاه {% endblock title %}
@@ -175,7 +176,7 @@
       <!-- End Row -->
 
       <div class="row row-cols-sm-2 row-cols-md-3 mb-10">
-        {% render_products object_list %}
+        {% render_products products %}
       </div>
       <!-- End Row -->
 

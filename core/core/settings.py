@@ -12,15 +12,20 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 from decouple import config, Csv
+from django.core.exceptions import ImproperlyConfigured
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
+def _require_secret_key(raw_value: str) -> str:
+    value = (raw_value or "").strip()
+    if not value or "fallback" in value:
+        raise ImproperlyConfigured("DJANGO_SECRET_KEY must be set in the environment for production.")
+    return value
+
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config("DJANGO_SECRET_KEY", default="django-insecure-fallback-key")
+SECRET_KEY = _require_secret_key(config("DJANGO_SECRET_KEY"))
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DJANGO_DEBUG", default="False", cast=bool)

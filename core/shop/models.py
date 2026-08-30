@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -76,15 +76,16 @@ class ProductModel(models.Model):
             base_slug = slugify(self.title, allow_unicode=True)
             self.slug = base_slug
             counter = 1
-            queryset = ProductModel.objects.filter(slug=self.slug)
-            if self.pk:
-                queryset = queryset.exclude(pk=self.pk)
-            while queryset.exists():
-                self.slug = f"{base_slug}-{counter}"
-                counter += 1
-                queryset = ProductModel.objects.filter(slug=self.slug)
+            with transaction.atomic():
+                queryset = ProductModel.objects.select_for_update().filter(slug=self.slug)
                 if self.pk:
                     queryset = queryset.exclude(pk=self.pk)
+                while queryset.exists():
+                    self.slug = f"{base_slug}-{counter}"
+                    counter += 1
+                    queryset = ProductModel.objects.select_for_update().filter(slug=self.slug)
+                    if self.pk:
+                        queryset = queryset.exclude(pk=self.pk)
         super().save(*args, **kwargs)
 
     def __str__(self):

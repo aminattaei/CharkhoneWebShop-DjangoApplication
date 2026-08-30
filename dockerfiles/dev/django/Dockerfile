@@ -1,4 +1,4 @@
-FROM python:3.11-slim-bookworm
+FROM python:3.12-slim
 
 LABEL maintainer="aminattaei2000@gmail.com"
 
