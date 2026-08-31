@@ -452,7 +452,86 @@ docker-compose up --build
 
 ---
 
-## MIT License
+## Production Hardening Summary
+
+This document summarizes the production-hardening work performed on the codebase, aligned with the 38-task engineering plan.
+
+### Completed Work
+
+#### Security
+- Enforced `DJANGO_SECRET_KEY` presence in production; removed insecure fallback.
+- Added email enumeration protection for verification and password reset flows.
+- Added atomic token invalidation for password reset and email verification tokens.
+- Added race-condition protection for Persian slug generation.
+- Aligned password reset token TTL to a single authoritative 48-hour window.
+- Removed broad exception swallowing in email sending and token handling.
+
+#### Architecture
+- Preserved existing Django app structure (`accounts`, `shop`, `website`, `core`).
+- Kept service-layer boundaries intact and avoided unnecessary abstraction.
+- Retained all existing business behavior unless a bug or security issue was found.
+
+#### Password Reset
+- Maintained custom web views and DRF API endpoints.
+- Kept 48-hour token expiry and one-time-use semantics.
+- Preserved rate limiting and account-lock checks.
+
+#### Email Verification
+- Kept `EmailVerificationToken` model and 12-hour expiry.
+- Preserved auto-send signal on user creation.
+- Fixed verification views to avoid enumerating registered emails.
+
+#### Database Integrity
+- Added `transaction.atomic()` and `select_for_update()` to token creation.
+- Preserved Persian slug support with `allow_unicode=True`.
+- Kept unique constraints on `User.email`, token hashes, and product slugs.
+
+#### Code Quality
+- Removed duplicate/unused imports and dead code paths.
+- Fixed template tag structure so product grids render correctly.
+- Standardized settings module references across `manage.py`, ASGI, WSGI, Celery, and tests.
+
+#### Testing
+- Added `conftest.py` and `pytest.ini` so `pytest` can discover Django settings.
+- Preserved all existing tests without modification.
+
+### Remaining / Deferred
+
+| Item | Reason |
+|------|--------|
+| Split `settings.py` into `base/development/production/test` | Low priority; current single-file setup is still workable |
+| Add CORS headers | Not required until a separate frontend/SPA is introduced |
+| Replace `runserver` with Gunicorn | Already known; requires production Dockerfile work |
+| Add Redis/Celery worker services | Existing Celery config is present but unused; revisit when async tasks are needed |
+
+### How to Run Tests
+
+```bash
+cd core
+python -m pytest accounts/tests/test_password_reset.py shop/tests/test_products.py -q
+```
+
+### Architecture Rating
+
+| Area | Rating |
+|------|--------|
+| Architecture | 7/10 |
+| Security | 7/10 |
+| Testing | 6/10 |
+| Performance | 6/10 |
+| DevOps | 6/10 |
+| Maintainability | 7/10 |
+| **Overall** | **6.5/10** |
+
+### Top Production Blockers
+
+1. `DEBUG=True` is still possible via env; ensure it is forced off in production.
+2. No HTTPS/security headers are enforced yet.
+3. No production-grade WSGI/ASGI server is configured.
+4. smtp4dev and development-only settings must not be used in production.
+5. `.env` files should be excluded from version control and replaced with a `.env.sample`.
+
+
 
 Copyright (c) 2026 Amin Attaei
 
