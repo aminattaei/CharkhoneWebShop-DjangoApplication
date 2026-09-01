@@ -274,9 +274,6 @@ pyrightconfig.json
 # Ignore database data
 postgres/data/*
 
-# Django migrations – ignore auto‑generated files but keep __init__.py
-**/migrations/*.py
-!**/migrations/__init__.py
 
 # Ignore mimocode configs
 .mimocode
