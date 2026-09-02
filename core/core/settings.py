@@ -170,6 +170,7 @@ LOGOUT_REDIRECT_URL = "/"
 
 # Password reset
 DEFAULT_FROM_EMAIL = "noreply@example.com"
+PUBLIC_BASE_URL = config("PUBLIC_BASE_URL", default="http://localhost:8000")
 
 # Smtp4dev configurations
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

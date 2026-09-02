@@ -7,9 +7,8 @@ logger = logging.getLogger(__name__)
 
 
 def build_password_reset_link(request, token):
-    protocol = "https" if request.is_secure() else "http"
-    domain = request.get_host()
-    return f"{protocol}://{domain}/accounts/reset/{token}/"
+    base_url = settings.PUBLIC_BASE_URL.rstrip("/")
+    return f"{base_url}/accounts/reset/{token}/"
 
 
 def send_password_reset_email(user, reset_link):

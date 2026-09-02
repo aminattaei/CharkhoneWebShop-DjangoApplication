@@ -10,6 +10,7 @@ from accounts.services import (
     verify_reset_token,
     mark_token_used,
     send_reset_email,
+    build_password_reset_link,
 )
 from accounts.throttles import (
     ResetRequestThrottle,
@@ -37,7 +38,8 @@ class RequestPasswordReset(APIView):
                 logger.warning("تلاش بازیابی رمز برای حساب قفل‌شده: %s", email)
             else:
                 token = generate_reset_token(user)
-                send_reset_email(user, token, request)
+                reset_link = build_password_reset_link(request, token)
+                send_reset_email(user, reset_link)
                 logger.info("توکن بازیابی رمز برای %s ایجاد شد.", email)
         except User.DoesNotExist:
             logger.info("تلاش بازیابی رمز برای ایمیل ناموجود: %s", email)

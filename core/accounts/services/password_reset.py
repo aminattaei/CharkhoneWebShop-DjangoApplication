@@ -2,6 +2,7 @@ import logging
 from dataclasses import dataclass
 
 from django.contrib.auth import get_user_model
+from django.db import transaction
 
 from .email import build_password_reset_link, send_password_reset_email
 from .tokens import generate_reset_token, mark_token_used, verify_reset_token
@@ -62,10 +63,20 @@ def complete_password_reset(token, new_password):
             detail="حساب کاربری قفل شده است.",
         )
 
-    user.set_password(new_password)
-    user.failed_reset_attempts = 0
-    user.save()
-    mark_token_used(token)
+    with transaction.atomic():
+        token_marked = mark_token_used(token)
+        if not token_marked:
+            logger.warning("تلاش بازیابی رمز با توکن قبلاً استفاده شده: %s", token[:20])
+            return PasswordResetResult(
+                ok=False,
+                status_code=400,
+                detail="توکن قبلاً استفاده شده است.",
+            )
+
+        user.set_password(new_password)
+        user.failed_reset_attempts = 0
+        user.save()
+
     logger.info("رمز عبور کاربر %s با موفقیت تغییر کرد.", user.email)
     return PasswordResetResult(
         ok=True,

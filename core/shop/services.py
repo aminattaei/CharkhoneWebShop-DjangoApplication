@@ -1,20 +1,22 @@
 from decimal import Decimal
 
 
-def _coerce_to_float(value, default=0.0):
-    if isinstance(value, (int, float, Decimal)):
-        return float(value)
+def _coerce_to_decimal(value, default=Decimal("0")):
+    if isinstance(value, Decimal):
+        return value
+    if isinstance(value, (int, float)):
+        return Decimal(str(value))
     try:
-        return float(value)
+        return Decimal(str(value))
     except (TypeError, ValueError):
         return default
 
 
 def calculate_final_price(price, discount_percent=0):
-    price_value = _coerce_to_float(price, default=0.0)
-    discount_value = _coerce_to_float(discount_percent, default=0.0)
+    price_value = _coerce_to_decimal(price, default=Decimal("0"))
+    discount_value = _coerce_to_decimal(discount_percent, default=Decimal("0"))
 
-    discount = Decimal(max(0, min(100, discount_value)))
-    price = Decimal(str(price_value))
+    discount = Decimal(max(0, min(100, int(discount_value))))
+    final = price_value * (Decimal("100") - discount) / Decimal("100")
 
-    return int(price * (100 - discount) / 100)
+    return final

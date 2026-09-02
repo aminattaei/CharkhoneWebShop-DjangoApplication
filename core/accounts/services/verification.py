@@ -15,13 +15,8 @@ VERIFICATION_MAX_AGE = 12 * 3600
 
 
 def build_verification_link(request, token):
-    if request and hasattr(request, "get_host"):
-        protocol = "https" if request.is_secure() else "http"
-        domain = request.get_host()
-    else:
-        protocol = "http"
-        domain = "localhost:8000"
-    return f"{protocol}://{domain}/accounts/verify-email/confirm/?token={token}"
+    base_url = settings.PUBLIC_BASE_URL.rstrip("/")
+    return f"{base_url}/accounts/verify-email/confirm/?token={token}"
 
 
 def send_verification_email(user, verification_link):
@@ -80,8 +75,11 @@ def mark_verification_token_used(token):
     try:
         raw_token = signer.unsign(token, max_age=VERIFICATION_MAX_AGE)
         token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
-        EmailVerificationToken.objects.filter(token_hash=token_hash).update(
-            is_used=True
-        )
+        updated = EmailVerificationToken.objects.filter(
+            token_hash=token_hash,
+            is_used=False,
+        ).update(is_used=True)
+        return updated > 0
     except (BadSignature, SignatureExpired) as e:
         logger.warning("خطا در غیرفعال کردن توکن تایید: %s", e)
+        return False

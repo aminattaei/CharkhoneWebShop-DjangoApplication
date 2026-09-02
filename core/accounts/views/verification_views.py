@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.contrib.auth import get_user_model
 from django.views import View
+from django.db import transaction
 
 from accounts.models import EmailVerificationToken
 from accounts.services.verification import (
@@ -60,11 +61,24 @@ class ConfirmVerificationView(View):
             messages.info(request, "حساب شما قبلاً تایید شده است.")
             return redirect("accounts:login")
 
-        user.is_verified = True
-        user.is_active = True
-        user.deactivated_at = None
-        user.save(update_fields=["is_verified", "is_active", "deactivated_at", "updated_date"])
-        mark_verification_token_used(token)
+        with transaction.atomic():
+            token_marked = mark_verification_token_used(token)
+            if not token_marked:
+                messages.error(request, "توکن تایید قبلاً استفاده شده است.")
+                return redirect("accounts:login")
+
+            user.is_verified = True
+            user.is_active = True
+            user.deactivated_at = None
+            user.save(
+                update_fields=[
+                    "is_verified",
+                    "is_active",
+                    "deactivated_at",
+                    "updated_date",
+                ]
+            )
+
         messages.success(request, "حساب شما با موفقیت تایید شد.")
         return redirect("accounts:login")
 

@@ -46,8 +46,11 @@ def mark_token_used(token):
     try:
         raw_token = signer.unsign(token, max_age=TOKEN_MAX_AGE)
         token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
-        PasswordResetToken.objects.filter(token_hash=token_hash).update(
-            is_used=True
-        )
+        updated = PasswordResetToken.objects.filter(
+            token_hash=token_hash,
+            is_used=False,
+        ).update(is_used=True)
+        return updated > 0
     except (BadSignature, SignatureExpired) as e:
         logger.warning("خطا در غیرفعال کردن توکن بازیابی: %s", e)
+        return False
