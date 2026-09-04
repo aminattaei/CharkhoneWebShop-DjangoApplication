@@ -1,0 +1,27 @@
+{% extends 'website/base.html' %}
+
+
+
+
+{% block title %}
+    اخبار جدید
+{% endblock title %}
+    
+
+
+{% block content %}
+    
+<div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+        <h1>{{ newsletter.subject }}</h1>
+        <p>{{ newsletter.preview_text }}</p>
+        <hr>
+        {{ newsletter.content|safe }}
+        <hr>
+        <p style="color: #666; font-size: 12px;">
+            You're receiving this because you subscribed to our newsletter.
+            <a href="{{ unsubscribe_url }}">Unsubscribe</a>
+        </p>
+    </div>
+
+{% endblock content %}
+    

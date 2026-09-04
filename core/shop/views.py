@@ -1,6 +1,8 @@
+from django.shortcuts import render
 from django.http import Http404
 from django.views import generic
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 
 
 from .filters import apply_product_filters
@@ -15,7 +17,7 @@ class ProductListView(generic.ListView):
 
     def get_queryset(self):
         queryset = (
-            ProductModel.objects.published()
+            ProductModel.objects.published() #type: ignore
             .select_related("category", "user")
             .order_by("-created_date")
         )
@@ -50,6 +52,6 @@ class ProductDetailView(generic.DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        product = self.object
+        product = self.object #type: ignore
         context["images"] = product.product_images.all()
         return context

@@ -7,8 +7,8 @@ from django.utils.text import slugify
 
 from datetime import timedelta
 
-from .managers import ProductQuerySet
-from .services import calculate_final_price
+from shop.managers import ProductQuerySet
+from shop.services import calculate_final_price
 
 User = get_user_model()
 

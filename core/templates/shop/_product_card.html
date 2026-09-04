@@ -5,7 +5,7 @@
     <!-- Card -->
     <div class="card card-bordered shadow-none text-center h-100">
       <div class="card-pinned">
-        <img class="card-img-top" src="{{ object.image.url }}" alt="Image Description">
+        <img class="card-img-top" src="{{ object.image.url }}" alt="{{ object.title }}">
         {% if object.is_new %}
           <div class="card-pinned-top-start">
             <span class="badge bg-success rounded-pill">جدید</span>

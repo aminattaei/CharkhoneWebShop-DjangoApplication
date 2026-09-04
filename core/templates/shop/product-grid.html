@@ -101,10 +101,10 @@
               <h5>دسته بندی</h5>
               <div class="d-grid gap-2">
                 <div class="mb-2 mb-sm-0 me-sm-2">
-                  <select class="form-select form-select-sm" name="category_id" id="category-id-filter">
+                  <select class="form-select form-select-sm" name="category_slug" id="category-slug-filter">
                     <option value="" selected>انتخاب دسته بندی</option>
                     {% for category in categories %}
-                    <option value="{{category.id}}">{{category.title}}</option>
+                    <option value="{{category.slug}}">{{category.title}}</option>
                     {% endfor %}
                   </select>
                 </div>
@@ -307,7 +307,7 @@
     $("#search-query-filter").val(current_url_params.get("q") || "")
     $("#min-price-filter").val(current_url_params.get("min_price") || "")
     $("#max-price-filter").val(current_url_params.get("max_price") || "")
-    $("#category-id-filter").val(current_url_params.get("category_id") || "")
+    $("#category-slug-filter").val(current_url_params.get("category_slug") || "")
 
   });
   $('#page-size-filter').change(function () {
