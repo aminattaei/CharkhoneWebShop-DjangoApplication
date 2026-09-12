@@ -1,5 +1,7 @@
 from django import template
 
+from shop.models import ProductModel
+
 register = template.Library()
 
 
@@ -10,3 +12,9 @@ def render_products(context, products, columns="col-lg-3 col-md-4 col-sm-6"):
         "columns": columns,
         "request": context.get("request"),
     }
+
+
+@register.inclusion_tag("shop/_related_products.html")
+def show_related_products(product):
+    related_products = ProductModel.objects.filter(category = product.category)[:4]
+    return {"related_products":related_products}

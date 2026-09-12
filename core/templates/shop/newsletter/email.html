@@ -19,7 +19,9 @@
         <hr>
         <p style="color: #666; font-size: 12px;">
             You're receiving this because you subscribed to our newsletter.
+            {% if unsubscribe_url %}
             <a href="{{ unsubscribe_url }}">Unsubscribe</a>
+            {% endif %}
         </p>
     </div>
 

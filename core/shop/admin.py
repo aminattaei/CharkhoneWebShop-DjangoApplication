@@ -71,7 +71,7 @@ class SubscriberAdmin(admin.ModelAdmin):
         for subscriber in queryset:
             subscriber.unsubscribe()
         self.message_user(request, f"{queryset.count()} subscribers unsubscribed.")
-    unsubscribe_selected.brief_description = "Unsubscribe selected"
+    unsubscribe_selected.short_description = "Unsubscribe selected"
 
 
 @admin.register(Newsletter)
@@ -95,7 +95,7 @@ class NewsletterAdmin(admin.ModelAdmin):
     
     def get_recipient_count(self, obj):
         return obj.get_recipient_count()
-    get_recipient_count.brief_description = "Recipients"
+    get_recipient_count.short_description = "Recipients"
 
 
 @admin.register(NewsletterRecipient)

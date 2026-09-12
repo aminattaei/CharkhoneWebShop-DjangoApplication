@@ -36,12 +36,12 @@ class ProductModel(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.PROTECT,
-        related_name="products",
+        related_name="user_products",
     )
     category = models.ForeignKey(
         ProductCategory,
         on_delete=models.CASCADE,
-        related_name="products",
+        related_name="productsـcategory",
     )
     title = models.CharField(max_length=255)
     slug = models.SlugField(allow_unicode=True, unique=True, max_length=255)

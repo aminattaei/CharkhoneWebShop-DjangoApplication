@@ -1,12 +1,14 @@
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.db import IntegrityError
 
 from datetime import datetime
 from decimal import Decimal
 
-
 from .models import Subscriber, Newsletter, NewsletterRecipient
+
+
 def _coerce_to_decimal(value, default=Decimal("0")):
     if isinstance(value, Decimal):
         return value
@@ -38,43 +40,46 @@ class NewsletterService:
         recipients = []
         
         for subscriber in subscribers:
-            recipient = NewsletterRecipient.objects.create(
+            recipient, created = NewsletterRecipient.objects.get_or_create(
                 newsletter=newsletter,
                 subscriber=subscriber,
-                status='pending'
+                defaults={'status': 'pending'}
             )
-            recipients.append(recipient)
+            if created:
+                recipients.append(recipient)
         
-        # Send emails (could be moved to Celery for async)
         for recipient in recipients:
             NewsletterService._send_email(recipient)
         
         newsletter.status = 'sent'
-        newsletter.sent_at = datetime.now()
+        from django.utils import timezone
+        newsletter.sent_at = timezone.now()
         newsletter.save()
     
     @staticmethod
     def _send_email(recipient):
         """Send a single newsletter email."""
+        from django.urls import reverse
+        
         newsletter = recipient.newsletter
         subscriber = recipient.subscriber
         
-        # Context for email template
+        unsubscribe_url = reverse('shop:newsletter_unsubscribe') + f'?email={subscriber.email}'
+        
         context = {
             'newsletter': newsletter,
             'subscriber': subscriber,
+            'unsubscribe_url': unsubscribe_url,
         }
         
-        # Render HTML content
         html_content = render_to_string('newsletter/email.html', context)
         
-        # Use plain text if provided, otherwise generate from HTML
         plain_text = newsletter.plain_text_content or strip_tags(html_content)
         
         email = EmailMultiAlternatives(
             subject=newsletter.subject,
             body=plain_text,
-            from_email=None,  # Uses DEFAULT_FROM_EMAIL
+            from_email=None,
             to=[subscriber.email],
         )
         email.attach_alternative(html_content, "text/html")
@@ -82,11 +87,11 @@ class NewsletterService:
         try:
             email.send()
             recipient.status = 'sent'
-            recipient.sent_at = datetime.now()
+            from django.utils import timezone
+            recipient.sent_at = timezone.now()
             recipient.save()
             return True
         except Exception as e:
             recipient.status = 'bounced'
             recipient.save()
-            # Log error
             return False
