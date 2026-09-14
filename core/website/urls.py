@@ -6,6 +6,6 @@ app_name = "website"
 
 urlpatterns = [
     path("", views.IndexShowView.as_view(), name="home_page"),
-    path("contact/", views.ContactTemplateView.as_view(), name="contact_page"),
+    path("contact/", views.ContactView.as_view(), name="contact_page"),
     path("about/", views.AboutTemplateView.as_view(), name="about_page"),
 ]

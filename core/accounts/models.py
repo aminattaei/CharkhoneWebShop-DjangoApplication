@@ -8,6 +8,8 @@ from django.db import models, transaction
 from django.core.validators import RegexValidator
 from django.utils import timezone
 
+from .validators import validate_national_id
+
 
 class UserType(models.IntegerChoices):
     customer = 1, _("customer")
@@ -76,8 +78,26 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-    first_name = models.CharField(max_length=255, blank=True, null=True)
+    first_name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        validators=[
+            RegexValidator(
+                regex=r"^[a-zA-Zآ-ی\s]+$",
+                message=_("Only Persian and English letters and spaces are allowed."),
+            )
+        ],
+    )
+
     last_name = models.CharField(max_length=255, blank=True, null=True)
+    national_id = models.CharField(
+        max_length=10,
+        blank=True,
+        null=True,
+        unique=True,
+        validators=[validate_national_id],
+    ) 
     phone_number = models.CharField(
         max_length=12,
         blank=True,

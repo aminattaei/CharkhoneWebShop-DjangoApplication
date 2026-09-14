@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <title>پیام جدید از فرم تماس</title>
+</head>
+<body style="font-family: Tahoma, sans-serif; direction: rtl; padding: 20px;">
+    <h2>پیام جدید از فرم تماس</h2>
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;"><strong>نام:</strong></td>
+            <td style="padding: 8px; border: 1px solid #ddd;">{{ contact.name }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;"><strong>ایمیل:</strong></td>
+            <td style="padding: 8px; border: 1px solid #ddd;">{{ contact.email }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;"><strong>موضوع:</strong></td>
+            <td style="padding: 8px; border: 1px solid #ddd;">{{ contact.subject }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;"><strong>تاریخ ارسال:</strong></td>
+            <td style="padding: 8px; border: 1px solid #ddd;">{{ contact.created_at }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd; vertical-align: top;"><strong>پیام:</strong></td>
+            <td style="padding: 8px; border: 1px solid #ddd;">{{ contact.message }}</td>
+        </tr>
+    </table>
+</body>
+</html>
