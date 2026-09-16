@@ -1,5 +1,5 @@
 from django import forms
-from .models import ContactModel
+from .models import ContactModel,Subscriber
 
 
 class ContactForm(forms.ModelForm):
@@ -28,4 +28,20 @@ class ContactForm(forms.ModelForm):
             },
             "subject": {"required": "لطفاً موضوع را وارد کنید."},
             "message": {"required": "لطفاً متن پیام را وارد کنید."},
+        }
+
+
+class SubscriberForm(forms.ModelForm):
+    class Meta:
+        model = Subscriber
+        fields = ["email"]
+        widgets = {
+            "email": forms.EmailInput(
+                attrs={
+                    "class": "form-control form-control-lg",
+                    "placeholder": "ایمیل خود را وارد نمایید",
+                    "type": "email",
+                    "required": True,
+                }
+            ),
         }

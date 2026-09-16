@@ -14,19 +14,4 @@ urlpatterns = [
         views.ProductDetailView.as_view(),
         name="product_detail",
     ),
-    path(
-        "newsletter/subscribe/",
-        views.SubscribeView.as_view(),
-        name="newsletter_subscribe",
-    ),
-    path(
-        "newsletter/verify/",
-        views.ConfirmSubscriptionView.as_view(),
-        name="newsletter_verify",
-    ),
-    path(
-        "newsletter/unsubscribe/",
-        views.UnsubscribeView.as_view(),
-        name="newsletter_unsubscribe",
-    ),
 ]
