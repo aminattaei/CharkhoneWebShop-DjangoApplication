@@ -215,32 +215,12 @@ class PasswordResetTokenAdmin(admin.ModelAdmin):
 # Django Session Admin
 # ============================================================
 
-@admin.register(Session)
 class SessionAdmin(admin.ModelAdmin):
-    """
-    Admin configuration for Django sessions.
-    """
-
-    def session_data(self, obj):
+    def _session_data(self, obj):
         return obj.get_decoded()
-
-    session_data.short_description = "Session Data"
-
-    list_display = (
-        "session_key",
-        "session_data",
-        "expire_date",
-    )
-
-    readonly_fields = (
-        "session_key",
-        "session_data",
-        "expire_date",
-    )
-
-    search_fields = (
-        "session_key",
-    )
+    list_display = ['session_key', '_session_data', 'expire_date']
+    readonly_fields = ['_session_data']
+admin.site.register(Session, SessionAdmin)
 
 # ============================================================
 # Email Verification Token Admin
