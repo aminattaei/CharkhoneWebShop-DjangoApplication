@@ -54,7 +54,7 @@
 
       {% if object.is_in_stock %}
         <div class="card-footer pt-0">
-          <button type="button" class="btn btn-outline-primary btn-sm btn-transition rounded-pill">افزودن به سبد خرید</button>
+          <button type="button" class="btn btn-outline-primary btn-sm btn-transition rounded-pill add-to-cart-btn" data-product-id="{{ object.pk }}">افزودن به سبد خرید</button>
         </div>
       {% elif not object.is_in_stock %}
         <div class="card-footer pt-0">

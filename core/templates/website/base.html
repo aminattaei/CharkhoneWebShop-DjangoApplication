@@ -14,7 +14,7 @@
   <!-- Favicon -->
   <link rel="shortcut icon" href="{% static 'favicon.ico' %}">
 
-  <!-- Font -->
+<!-- Font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
   <!-- CSS Implementing Plugins -->
@@ -27,6 +27,8 @@
   <!-- Toastify links-->
   <link rel="stylesheet" href="{% static 'vendor/src/toastify.css' %}">
 
+  <!-- CSRF Token for AJAX -->
+  <meta name="csrf-token" content="{{ csrf_token }}">
 
   {% block extra_css %} {% endblock extra_css %}
 
@@ -89,7 +91,7 @@
               <button type="button" class="btn btn-ghost-secondary btn-icon" type="button" data-bs-toggle="offcanvas"
                 data-bs-target="#offcanvasNavbarShoppingCart" aria-controls="offcanvasNavbarShoppingCart">
                 <i class="bi-basket"></i>
-                <span class="cart-item-count ">3</span>
+                <span class="cart-item-count">{{ cart.total_items }}</span>
               </button>
               <!-- End Shopping Cart -->
 
@@ -436,6 +438,59 @@
   <!-- Toastify script (must load BEFORE the messages script below) -->
   <script src="{% static 'vendor/src/toastify.js' %}"></script>
 
+  <!-- Custom Cart JS (runs early, independent of plugins) -->
+  <script>
+    $(function() {
+      const csrfToken = $('meta[name="csrf-token"]').attr('content') || '';
+      console.log('Cart JS loaded, CSRF:', csrfToken ? 'OK' : 'MISSING');
+
+      function updateCartCount(totalItems) {
+        $('.cart-item-count').text(totalItems);
+      }
+
+      function showAddedToCartNotification(productTitle) {
+        if (typeof Toastify !== 'undefined') {
+          Toastify({
+            text: productTitle + ' به سبد خرید اضافه شد',
+            duration: 3000,
+            gravity: 'top',
+            position: 'left',
+            stopOnFocus: true,
+            style: { background: '#2ecc71' },
+          }).showToast();
+        }
+      }
+
+      function handleAddToCart() {
+        const $button = $(this);
+        const productId = $button.data('product-id');
+        console.log('Add to cart clicked, productId:', productId);
+        if (!productId) return;
+
+        $.ajax({
+          url: "{% url 'cart:add_to_cart' %}",
+          method: 'POST',
+          data: { product_id: productId },
+          headers: { 'X-CSRFToken': csrfToken },
+          dataType: 'json',
+          success: function(data) {
+            console.log('Success:', data);
+            if (data.total_items !== undefined) updateCartCount(data.total_items);
+            if (data.product_title) showAddedToCartNotification(data.product_title);
+          },
+          error: function(xhr, status, error) {
+            console.error('AJAX Error:', status, error);
+            console.error('Response:', xhr.responseText);
+            if (xhr.status === 403) alert('CSRF Error - صفحه را رفرش کنید');
+            else if (xhr.responseJSON && xhr.responseJSON.detail) alert(xhr.responseJSON.detail);
+          }
+        });
+      }
+
+      $(document).on('click', '.add-to-cart-btn', handleAddToCart);
+    });
+  </script>
+
   <!-- Render Django messages as Toastify toasts (runs AFTER toastify-js is loaded) -->
   {% if messages %}
   <script>
@@ -558,7 +613,7 @@
     })()
   </script>
 
-  {% block extra_js %} {% endblock extra_js %}
+{% block extra_js %} {% endblock extra_js %}
 
   {% block extra_js_no_compress %} {% endblock extra_js_no_compress %}
 

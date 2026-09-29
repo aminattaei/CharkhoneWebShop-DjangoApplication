@@ -14,7 +14,6 @@ class Cart(models.Model):
     created_date = models.DateTimeField(auto_now=False, auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True, auto_now_add=False)
     
-
     class Meta:
         verbose_name = _("Cart")
         verbose_name_plural = _("Carts")
@@ -25,11 +24,54 @@ class Cart(models.Model):
     def get_absolute_url(self):
         return reverse("Cart_detail", kwargs={"pk": self.pk})
 
+    @classmethod
+    def get_or_create_for_user(cls, user):
+        """Get or create a cart for the given user."""
+        cart, created = cls.objects.get_or_create(user=user)
+        return cart
+
+    def add_item(self, product_id, quantity=1):
+        """Add or update an item in the cart."""
+        cart_item, created = self.items.get_or_create(
+            product_id=product_id,
+            defaults={'quantity': quantity}
+        )
+        if not created:
+            cart_item.quantity += quantity
+            cart_item.save()
+        return cart_item
+
+    def merge_session_cart(self, session_cart):
+        """Merge session cart items into this user's cart."""
+        for item in session_cart.items:
+            self.add_item(item["product_id"], item["quantity"])
+        session_cart.clear()
+
+    @property
+    def items(self):
+        """Return list of dicts with product_id and quantity for compatibility with CartSession."""
+        return [
+            {"product_id": item.product_id, "quantity": item.quantity}
+            for item in self.items.all()
+        ]
+
+    @property
+    def total_items(self):
+        return sum(item.quantity for item in self.items.all())
+
+    @property
+    def total_price(self):
+        total = 0
+        for item in self.items.all():
+            if item.product:
+                total += item.product.final_price * item.quantity
+        return total
+
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(ProductModel, related_name='cart_items', on_delete=models.PROTECT)
-    quantity = models.PositiveIntegerField(default = 0)
+    quantity = models.PositiveIntegerField(default=0)
 
     created_date = models.DateTimeField(auto_now=False, auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True, auto_now_add=False)
