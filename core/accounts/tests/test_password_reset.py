@@ -54,26 +54,24 @@ class ResetPasswordTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("نامعتبر", response.data["detail"])
 
-    @patch("accounts.api.v1.views.verify_reset_token")
-    def test_reset_with_valid_token(self, mock_verify):
-        mock_verify.return_value = self.user.id
+    def test_reset_with_valid_token(self):
+        token = generate_reset_token(self.user)
         response = self.client.post(
             "/accounts/api/v1/reset-password/",
-            {"token": "valid-token", "new_password": "newpass1234"},
+            {"token": token, "new_password": "newpass1234"},
             format="json",
         )
         self.assertEqual(response.status_code, 200)
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password("newpass1234"))
 
-    @patch("accounts.api.v1.views.verify_reset_token")
-    def test_reset_with_locked_account(self, mock_verify):
-        mock_verify.return_value = self.user.id
+    def test_reset_with_locked_account(self):
+        token = generate_reset_token(self.user)
         self.user.is_locked = True
         self.user.save()
         response = self.client.post(
             "/accounts/api/v1/reset-password/",
-            {"token": "valid-token", "new_password": "newpass1234"},
+            {"token": token, "new_password": "newpass1234"},
             format="json",
         )
         self.assertEqual(response.status_code, 403)
