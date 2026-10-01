@@ -7,10 +7,9 @@ from rest_framework.views import APIView
 from accounts.models import User
 from accounts.services import (
     generate_reset_token,
-    verify_reset_token,
-    mark_token_used,
     send_reset_email,
     build_password_reset_link,
+    complete_password_reset,
 )
 from accounts.throttles import (
     ResetRequestThrottle,
@@ -60,38 +59,9 @@ class ResetPassword(APIView):
         token = serializer.validated_data["token"]
         new_password = serializer.validated_data["new_password"]
 
-        user_id = verify_reset_token(token)
-        if user_id is None:
-            logger.warning("تلاش بازیابی رمز با توکن نامعتبر")
-            return Response(
-                {"detail": "توکن نامعتبر یا منقضی شده است."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        # complete_password_reset claims the token under a row lock and changes
+        # the password in the same transaction, so one token can be spent only
+        # once even under concurrent requests.
+        result = complete_password_reset(token, new_password)
 
-        try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            logger.error("کاربر با شناسه %s یافت نشد.", user_id)
-            return Response(
-                {"detail": "کاربر یافت نشد."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if user.is_locked:
-            logger.warning("تلاش تغییر رمز برای حساب قفل‌شده: %s", user.email)
-            return Response(
-                {"detail": "حساب کاربری قفل شده است."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        user.set_password(new_password)
-        user.failed_reset_attempts = 0
-        user.save()
-
-        mark_token_used(token)
-        logger.info("رمز عبور کاربر %s با موفقیت تغییر کرد.", user.email)
-
-        return Response(
-            {"detail": "رمز عبور با موفقیت تغییر کرد."},
-            status=status.HTTP_200_OK,
-        )
+        return Response({"detail": result.detail}, status=result.status_code)

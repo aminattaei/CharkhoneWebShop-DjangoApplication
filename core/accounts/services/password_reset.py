@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from .email import build_password_reset_link, send_password_reset_email
-from .tokens import generate_reset_token, mark_token_used, verify_reset_token
+from .tokens import claim_reset_token, generate_reset_token, verify_reset_token
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -64,9 +64,13 @@ def complete_password_reset(token, new_password):
         )
 
     with transaction.atomic():
-        token_marked = mark_token_used(token)
-        if not token_marked:
-            logger.warning("تلاش بازیابی رمز با توکن قبلاً استفاده شده: %s", token[:20])
+        # Claim the token under a row lock before touching the password, so
+        # concurrent requests for the same token cannot both succeed. If the
+        # password update below fails, this transaction rolls back and the token
+        # returns to an unused state.
+        claimed_user_id = claim_reset_token(token)
+        if claimed_user_id is None or claimed_user_id != user.id:
+            logger.warning("تلاش بازیابی رمز با توکن قبلاً استفاده شده")
             return PasswordResetResult(
                 ok=False,
                 status_code=400,
