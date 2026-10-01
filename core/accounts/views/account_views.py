@@ -3,10 +3,16 @@ import logging
 from django.contrib.auth import views as auth_views
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login
+from django.db import transaction
 from django.views import View
 from django.shortcuts import render, redirect
 
 from ..forms import AuthenticationForm, RegisterForm
+from ..services.verification import (
+    build_verification_link,
+    generate_verification_token,
+    send_verification_email,
+)
 from cart.cart import CartSession
 from cart.models import Cart
 
@@ -54,9 +60,20 @@ class RegisterView(View):
             email = form.cleaned_data["email"]
             password = form.cleaned_data["password"]
 
-            user = User.objects.create_user(
-                email=email,
-                password=password,
+            # User and verification token are persisted together; the email is
+            # only sent once that transaction has committed, so a rollback can
+            # never leave a delivered link pointing at a missing account.
+            with transaction.atomic():
+                user = User.objects.create_user(
+                    email=email,
+                    password=password,
+                )
+                # Only a hash of this token is stored, so the signed token is
+                # kept in memory and emailed after the commit.
+                verification_token = generate_verification_token(user)
+
+            verification_sent = send_verification_email(
+                user, build_verification_link(request, verification_token)
             )
 
             # Log the user in automatically after registration
@@ -65,10 +82,17 @@ class RegisterView(View):
             # Merge session cart to user's cart
             merge_session_cart_to_user(request, user)
 
-            messages.success(
-                request,
-                "ثبت نام شما با موفقیت انجام شد. لطفاً ایمیل خود را بررسی کنید.",
-            )
+            if verification_sent:
+                messages.success(
+                    request,
+                    "ثبت نام شما با موفقیت انجام شد. لطفاً ایمیل خود را بررسی کنید.",
+                )
+            else:
+                messages.warning(
+                    request,
+                    "ثبت نام انجام شد، اما ارسال ایمیل تایید ممکن نشد. "
+                    "لطفاً از صفحه ارسال مجدد ایمیل تایید استفاده کنید.",
+                )
             return redirect("accounts:login")
 
         return render(request, self.template_name, context)

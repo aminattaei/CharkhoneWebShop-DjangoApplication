@@ -34,7 +34,7 @@ class RequestVerificationView(View):
             send_verification_email(user, token)
 
         messages.success(request, "اگر ایمیل وجود داشته باشد، لینک تایید ارسال شده است.")
-        return redirect("accounts:verify_email_sent")
+        return redirect("accounts:verify-email-sent")
 
 
 class ConfirmVerificationView(View):
@@ -105,4 +105,4 @@ class ResendVerificationView(View):
             send_verification_email(user, token)
 
         messages.success(request, "اگر ایمیل وجود داشته باشد، لینک تایید مجددا ارسال شده است.")
-        return redirect("accounts:verify_email_sent")
+        return redirect("accounts:verify-email-sent")
