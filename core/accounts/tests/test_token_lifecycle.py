@@ -1,26 +1,44 @@
 import hashlib
-import time
+from contextlib import contextmanager
+from datetime import timedelta
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase, override_settings
-from django.utils import timezone
+from django.core.signing import SignatureExpired
+from django.test import TestCase
 
-from accounts.models import PasswordResetToken, EmailVerificationToken
+from accounts.models import EmailVerificationToken, PasswordResetToken
 from accounts.services.tokens import (
-    generate_reset_token,
-    verify_reset_token,
-    mark_token_used,
     TOKEN_MAX_AGE,
+    generate_reset_token,
+    mark_token_used,
+    signer,
+    verify_reset_token,
 )
 from accounts.services.verification import (
-    generate_verification_token,
-    verify_verification_token,
-    mark_verification_token_used,
     VERIFICATION_MAX_AGE,
+    generate_verification_token,
+    mark_verification_token_used,
+    verify_verification_token,
 )
 
 User = get_user_model()
+
+
+@contextmanager
+def time_travelled_to(moment):
+    """Move both clocks the token lifecycle reads.
+
+    A token expires when either the signing timestamp is older than the max age
+    (compared against ``time.time()`` inside Django's signer) or the stored row
+    passes ``is_valid()`` (which reads ``django.utils.timezone.now()``). Both
+    have to move together to simulate a real point in time. No time-freezing
+    library is available in this project, so both are patched.
+    """
+    with patch(
+        "django.core.signing.time.time", return_value=moment.timestamp()
+    ), patch("django.utils.timezone.now", return_value=moment):
+        yield
 
 
 class PasswordResetTokenLifecycleTests(TestCase):
@@ -28,65 +46,129 @@ class PasswordResetTokenLifecycleTests(TestCase):
         self.user = User.objects.create_user(
             email="test@example.com", password="testpass123"
         )
+        self.token = generate_reset_token(self.user)
+        self.row = PasswordResetToken.objects.get(user=self.user)
 
+    # 1. a newly generated token is valid
     def test_token_is_valid_immediately_after_creation(self):
-        token = generate_reset_token(self.user)
-        user_id = verify_reset_token(token)
+        self.assertEqual(verify_reset_token(self.token), self.user.id)
+
+    # 2. the database never stores the usable token
+    def test_stored_value_is_a_hash_and_not_the_token(self):
+        stored = self.row.token_hash
+
+        self.assertNotEqual(stored, self.token)
+        self.assertEqual(len(stored), 64)
+        self.assertTrue(all(c in "0123456789abcdef" for c in stored))
+        # The token still works even though the raw token itself is not stored.
+        self.assertEqual(verify_reset_token(self.token), self.user.id)
+
+    # 3. the stored row is not a reusable credential on its own
+    def test_stored_hash_does_not_verify_without_the_signed_token(self):
+        self.assertIsNone(verify_reset_token(self.row.token_hash))
+
+    # 4. stored expiration is approximately 48 hours after creation
+    def test_stored_expiration_is_approximately_48_hours(self):
+        self.assertAlmostEqual(
+            self.row.expires_at,
+            self.row.created_at + timedelta(hours=48),
+            delta=timedelta(seconds=5),
+        )
+
+    def test_max_age_constant_is_48_hours(self):
+        self.assertEqual(TOKEN_MAX_AGE, 48 * 3600)
+
+    # 5. the token stays valid before the 48 hour window closes
+    def test_token_remains_valid_just_before_48_hours(self):
+        moment = self.row.created_at + timedelta(hours=47, minutes=59)
+
+        with time_travelled_to(moment):
+            user_id = verify_reset_token(self.token)
+
         self.assertEqual(user_id, self.user.id)
 
-    def test_token_invalid_after_expiration(self):
-        token = generate_reset_token(self.user)
-        with patch("django.utils.timezone.now") as mock_now:
-            mock_now.return_value = timezone.now() + timezone.timedelta(seconds=TOKEN_MAX_AGE + 100)
-            user_id = verify_reset_token(token)
-        self.assertIsNone(user_id)
+    def test_token_remains_valid_while_stored_row_is_valid(self):
+        with time_travelled_to(self.row.created_at):
+            self.assertTrue(self.row.is_valid())
+            self.assertEqual(verify_reset_token(self.token), self.user.id)
 
-    def test_token_can_be_marked_as_used(self):
-        token = generate_reset_token(self.user)
-        result = mark_token_used(token)
-        self.assertTrue(result)
-        user_id = verify_reset_token(token)
-        self.assertIsNone(user_id)
+    # 6. boundary: at exactly 48 hours the token is already invalid
+    def test_token_is_invalid_at_exactly_48_hours(self):
+        moment = self.row.created_at + timedelta(hours=48)
 
-    def test_marking_already_used_token_returns_false(self):
-        token = generate_reset_token(self.user)
-        mark_token_used(token)
-        result = mark_token_used(token)
-        self.assertFalse(result)
+        with time_travelled_to(moment):
+            self.assertIsNone(verify_reset_token(self.token))
 
-    def test_verify_invalid_token_returns_none(self):
-        user_id = verify_reset_token("invalid-token")
-        self.assertIsNone(user_id)
+    def test_stored_row_is_no_longer_valid_at_exactly_48_hours(self):
+        with time_travelled_to(self.row.created_at + timedelta(hours=48)):
+            self.assertFalse(self.row.is_valid())
+
+    def test_signature_age_check_rejects_at_48_hours(self):
+        # The signer treats max_age as exclusive (it expires when age > max_age),
+        # and the stored timestamp is truncated to whole seconds, so a token
+        # reaching 48 hours has an age of at least the max age.
+        with time_travelled_to(self.row.created_at + timedelta(hours=48)):
+            with self.assertRaises(SignatureExpired):
+                signer.unsign(self.token, max_age=TOKEN_MAX_AGE)
+
+    # 7. the token is invalid after 48 hours
+    def test_token_is_invalid_after_48_hours(self):
+        for delta in (
+            timedelta(hours=48, seconds=1),
+            timedelta(hours=49),
+            timedelta(days=8),
+        ):
+            with self.subTest(delta=delta):
+                with time_travelled_to(self.row.created_at + delta):
+                    self.assertIsNone(verify_reset_token(self.token))
+
+    # 8. a used token is invalid
+    def test_used_token_is_invalid(self):
+        self.assertTrue(mark_token_used(self.token))
+
+        self.assertIsNone(verify_reset_token(self.token))
+
+    def test_mark_token_used_returns_false_when_already_used(self):
+        self.assertTrue(mark_token_used(self.token))
+        self.assertFalse(mark_token_used(self.token))
 
     def test_token_is_single_use(self):
-        token = generate_reset_token(self.user)
-        user_id = verify_reset_token(token)
-        self.assertEqual(user_id, self.user.id)
-        mark_token_used(token)
-        user_id = verify_reset_token(token)
-        self.assertIsNone(user_id)
+        self.assertEqual(verify_reset_token(self.token), self.user.id)
+        mark_token_used(self.token)
 
+        self.assertIsNone(verify_reset_token(self.token))
+
+    # 9. tampered tokens are invalid
+    def test_tampered_token_is_invalid(self):
+        appended = self.token + "x"
+        middle = len(self.token) // 2
+        swapped = (
+            self.token[:middle]
+            + ("a" if self.token[middle] != "a" else "b")
+            + self.token[middle + 1 :]
+        )
+        truncated = self.token[:-1]
+
+        for label, candidate in (
+            ("appended", appended),
+            ("swapped middle", swapped),
+            ("truncated", truncated),
+        ):
+            with self.subTest(tampering=label):
+                self.assertIsNone(verify_reset_token(candidate))
+
+    def test_random_token_is_invalid(self):
+        for candidate in ("", "not-a-token", hashlib.sha256(b"x").hexdigest()):
+            with self.subTest(candidate=candidate):
+                self.assertIsNone(verify_reset_token(candidate))
+
+    # 10. superseding behaviour is unchanged
     def test_new_token_invalidates_previous_unused_tokens(self):
-        token1 = generate_reset_token(self.user)
-        token2 = generate_reset_token(self.user)
-        user_id = verify_reset_token(token1)
-        self.assertIsNone(user_id)
-        user_id = verify_reset_token(token2)
-        self.assertEqual(user_id, self.user.id)
+        first = generate_reset_token(self.user)
+        second = generate_reset_token(self.user)
 
-    def test_token_storage_uses_hash_not_raw_token(self):
-        token = generate_reset_token(self.user)
-        raw_token = token.split(":")[-1]
-        stored_tokens = PasswordResetToken.objects.filter(user=self.user)
-        for stored in stored_tokens:
-            self.assertNotEqual(stored.token_hash, raw_token)
-            self.assertEqual(len(stored.token_hash), 64)
-
-    def test_token_expiry_is_48_hours(self):
-        token = generate_reset_token(self.user)
-        stored = PasswordResetToken.objects.get(token_hash__startswith=hashlib.sha256(token.encode()).hexdigest()[:16])
-        expected_expiry = timezone.now() + timezone.timedelta(hours=48)
-        self.assertAlmostEqual(stored.expires_at, expected_expiry, delta=timezone.timedelta(seconds=10))
+        self.assertIsNone(verify_reset_token(first))
+        self.assertEqual(verify_reset_token(second), self.user.id)
 
 
 class EmailVerificationTokenLifecycleTests(TestCase):
@@ -94,55 +176,63 @@ class EmailVerificationTokenLifecycleTests(TestCase):
         self.user = User.objects.create_user(
             email="verify@example.com", password="testpass123"
         )
+        self.token = generate_verification_token(self.user)
+        # Creating the user already issued one via the post_save signal; the row
+        # for the token under test is the only one still unused.
+        self.row = EmailVerificationToken.objects.get(
+            user=self.user, is_used=False
+        )
 
     def test_token_is_valid_immediately_after_creation(self):
-        token = generate_verification_token(self.user)
-        user_id = verify_verification_token(token)
-        self.assertEqual(user_id, self.user.id)
+        self.assertEqual(verify_verification_token(self.token), self.user.id)
 
-    def test_token_invalid_after_expiration(self):
-        token = generate_verification_token(self.user)
-        with patch("django.utils.timezone.now") as mock_now:
-            mock_now.return_value = timezone.now() + timezone.timedelta(seconds=VERIFICATION_MAX_AGE + 100)
-            user_id = verify_verification_token(token)
-        self.assertIsNone(user_id)
+    def test_stored_value_is_a_hash_and_not_the_token(self):
+        self.assertNotEqual(self.row.token_hash, self.token)
+        self.assertEqual(len(self.row.token_hash), 64)
 
-    def test_token_can_be_marked_as_used(self):
-        token = generate_verification_token(self.user)
-        result = mark_verification_token_used(token)
-        self.assertTrue(result)
-        user_id = verify_verification_token(token)
-        self.assertIsNone(user_id)
+    def test_stored_expiration_is_approximately_12_hours(self):
+        self.assertEqual(VERIFICATION_MAX_AGE, 12 * 3600)
+        self.assertAlmostEqual(
+            self.row.expires_at,
+            self.row.created_at + timedelta(hours=12),
+            delta=timedelta(seconds=5),
+        )
+
+    def test_token_remains_valid_just_before_12_hours(self):
+        with time_travelled_to(self.row.created_at + timedelta(hours=11, minutes=59)):
+            self.assertEqual(verify_verification_token(self.token), self.user.id)
+
+    def test_token_is_invalid_at_exactly_12_hours(self):
+        with time_travelled_to(self.row.created_at + timedelta(hours=12)):
+            self.assertIsNone(verify_verification_token(self.token))
+
+    def test_token_is_invalid_after_12_hours(self):
+        with time_travelled_to(self.row.created_at + timedelta(hours=13)):
+            self.assertIsNone(verify_verification_token(self.token))
+
+    def test_used_token_is_invalid(self):
+        self.assertTrue(mark_verification_token_used(self.token))
+
+        self.assertIsNone(verify_verification_token(self.token))
 
     def test_marking_already_used_token_returns_false(self):
-        token = generate_verification_token(self.user)
-        mark_verification_token_used(token)
-        result = mark_verification_token_used(token)
-        self.assertFalse(result)
-
-    def test_verify_invalid_token_returns_none(self):
-        user_id = verify_verification_token("invalid-token")
-        self.assertIsNone(user_id)
+        self.assertTrue(mark_verification_token_used(self.token))
+        self.assertFalse(mark_verification_token_used(self.token))
 
     def test_token_is_single_use(self):
-        token = generate_verification_token(self.user)
-        user_id = verify_verification_token(token)
-        self.assertEqual(user_id, self.user.id)
-        mark_verification_token_used(token)
-        user_id = verify_verification_token(token)
-        self.assertIsNone(user_id)
+        self.assertEqual(verify_verification_token(self.token), self.user.id)
+        mark_verification_token_used(self.token)
+
+        self.assertIsNone(verify_verification_token(self.token))
+
+    def test_tampered_token_is_invalid(self):
+        self.assertIsNone(verify_verification_token(self.token + "x"))
+        self.assertIsNone(verify_verification_token(self.token[:-1]))
+        self.assertIsNone(verify_verification_token("not-a-token"))
 
     def test_new_token_invalidates_previous_unused_tokens(self):
-        token1 = generate_verification_token(self.user)
-        token2 = generate_verification_token(self.user)
-        user_id = verify_verification_token(token1)
-        self.assertIsNone(user_id)
-        user_id = verify_verification_token(token2)
-        self.assertEqual(user_id, self.user.id)
+        first = generate_verification_token(self.user)
+        second = generate_verification_token(self.user)
 
-    def test_token_expiry_is_12_hours(self):
-        token = generate_verification_token(self.user)
-        raw_token = token.split(":")[1] if ":" in token else token
-        stored = EmailVerificationToken.objects.get(token_hash__startswith=hashlib.sha256(raw_token.encode()).hexdigest()[:16])
-        expected_expiry = timezone.now() + timezone.timedelta(hours=12)
-        self.assertAlmostEqual(stored.expires_at, expected_expiry, delta=timezone.timedelta(seconds=10))
+        self.assertIsNone(verify_verification_token(first))
+        self.assertEqual(verify_verification_token(second), self.user.id)
