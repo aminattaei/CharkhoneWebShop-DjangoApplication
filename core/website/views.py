@@ -8,12 +8,13 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from datetime import datetime
 
 
 from .forms import ContactForm,SubscriberForm
 from .services import NewsletterService
+from .unsubscribe_tokens import unsubscribe_token_subject
 
 from shop.models import (
     ProductModel, ProductCategory, ProductStatusType,
@@ -159,14 +160,36 @@ class ConfirmSubscriptionView(View):
 
 
 class UnsubscribeView(View):
+    """Unsubscribe a subscriber using a signed, time-limited token.
+
+    A GET only renders the confirmation page; state changes on POST. The old
+    ``?email=`` authorization is gone: knowledge of an email address is no
+    longer sufficient to cancel a subscription.
+    """
+
+    template_name = "website/newsletter/unsubscribe.html"
+
     def get(self, request):
-        email = request.GET.get("email", "")
-        if not email:
-            messages.error(request, "آدرس ایمیل نامعتبر است.")
+        token = request.GET.get("token", "")
+        if unsubscribe_token_subject(token) is None:
+            messages.error(request, "لینک لغو اشتراک نامعتبر یا منقضی شده است.")
             return redirect("website:home_page")
 
-        subscriber = Subscriber.objects.filter(email=email).first()
-        if subscriber and subscriber.is_active:
+        return render(request, self.template_name, {"token": token})
+
+    def post(self, request):
+        token = request.POST.get("token", "")
+        subscriber_pk = unsubscribe_token_subject(token)
+        if subscriber_pk is None:
+            messages.error(request, "لینک لغو اشتراک نامعتبر یا منقضی شده است.")
+            return redirect("website:home_page")
+
+        subscriber = Subscriber.objects.filter(pk=subscriber_pk).first()
+        if subscriber is None:
+            messages.info(request, "اشتراک فعالی با این ایمیل پیدا نشد.")
+            return redirect("website:home_page")
+
+        if subscriber.is_active:
             subscriber.unsubscribe()
             messages.success(request, "اشتراک شما با موفقیت لغو شد.")
         else:

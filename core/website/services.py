@@ -34,12 +34,12 @@ class NewsletterService:
     @staticmethod
     def _send_email(recipient):
         """Send a single newsletter email."""
-        from django.urls import reverse
-        
+        from .unsubscribe_tokens import build_unsubscribe_url
+
         newsletter = recipient.newsletter
         subscriber = recipient.subscriber
-        
-        unsubscribe_url = reverse('website:newsletter_unsubscribe') + f'?email={subscriber.email}'
+
+        unsubscribe_url = build_unsubscribe_url(subscriber.pk)
         
         context = {
             'newsletter': newsletter,

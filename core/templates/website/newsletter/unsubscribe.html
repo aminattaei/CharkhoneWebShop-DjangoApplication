@@ -1,0 +1,33 @@
+{% extends 'website/base.html' %}
+
+{% block title %} لغو اشتراک خبرنامه {% endblock title %}
+
+{% block content %}
+
+<div class="container content-space-t-3 content-space-b-2">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+
+            <div class="card">
+                <div class="card-body p-5 text-center">
+                    <h1 class="h3 mb-3">لغو اشتراک خبرنامه</h1>
+
+                    <p class="mb-4">
+                        آیا از لغو اشتراک خود از خبرنامه مطمئن هستید؟
+                        پس از لغو اشتراک، ایمیل‌های بعدی برای شما ارسال نخواهد شد.
+                    </p>
+
+                    <form method="post" action="{% url 'website:newsletter_unsubscribe' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="token" value="{{ token }}">
+                        <button type="submit" class="btn btn-danger">بله، اشتراک را لغو کن</button>
+                        <a href="{% url 'website:home_page' %}" class="btn btn-link">انصراف</a>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

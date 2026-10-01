@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model
 from datetime import datetime
@@ -75,8 +76,8 @@ class Subscriber(models.Model):
     def unsubscribe(self):
         """Unsubscribe the subscriber."""
         self.is_active = False
-        self.unsubscribed_at = datetime.now()
-        self.save()
+        self.unsubscribed_at = timezone.now()
+        self.save(update_fields=["is_active", "unsubscribed_at"])
 
 
 class Newsletter(models.Model):
