@@ -136,12 +136,14 @@ class ConfirmSubscriptionView(View):
             return redirect("website:home_page")
 
         try:
-            raw_token = signer.unsign(token, max_age=NEWSLETTER_VERIFICATION_MAX_AGE)
+            signer.unsign(token, max_age=NEWSLETTER_VERIFICATION_MAX_AGE)
         except (BadSignature, SignatureExpired):
             messages.error(request, "توکن تایید نامعتبر یا منقضی شده است.")
             return redirect("website:home_page")
 
-        token_hash = hash_token(raw_token)
+        # The database stores the hash of the *signed* token (see SubscribeView),
+        # so the lookup must hash the signed token exactly as it was emailed.
+        token_hash = hash_token(token)
         try:
             subscriber = Subscriber.objects.get(verification_token=token_hash)
         except Subscriber.DoesNotExist:
