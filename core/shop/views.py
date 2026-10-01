@@ -51,7 +51,7 @@ class ProductDetailView(generic.DetailView):
             raise Http404("محصول یافت نشد")
 
         return get_object_or_404(
-            ProductModel.objects.prefetch_related("product_images"),
+            ProductModel.objects.published().prefetch_related("product_images"),
             slug=slug
         )
 
