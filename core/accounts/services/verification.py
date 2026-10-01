@@ -14,12 +14,24 @@ signer = TimestampSigner()
 VERIFICATION_MAX_AGE = 12 * 3600
 
 
+def _token_fingerprint(token):
+    """Non-reversible short identifier safe to write to logs."""
+    return hashlib.sha256((token or "").encode()).hexdigest()[:12]
+
+
 def build_verification_link(request, token):
     base_url = settings.PUBLIC_BASE_URL.rstrip("/")
     return f"{base_url}/accounts/verify-email/confirm/?token={token}"
 
 
 def send_verification_email(user, verification_link):
+    """Send the verification email and report whether it was actually sent.
+
+    Returns True when the message was handed to the mail backend, False when
+    sending failed. The failure is logged, never raised, so that a mail outage
+    cannot roll back a committed registration; callers are expected to surface
+    the False result to the user instead of assuming delivery.
+    """
     email = user.email
     profile = getattr(user, "profile", None)
     name = profile.first_name if profile and profile.first_name else email
@@ -37,8 +49,10 @@ def send_verification_email(user, verification_link):
             fail_silently=False,
         )
         logger.info("ایمیل تایید با موفقیت به %s ارسال شد.", email)
+        return True
     except Exception as e:
         logger.error("خطا در ارسال ایمیل تایید به %s: %s", email, e)
+        return False
 
 
 def generate_verification_token(user):
@@ -53,7 +67,7 @@ def verify_verification_token(token):
     try:
         raw_token = signer.unsign(token, max_age=VERIFICATION_MAX_AGE)
     except (BadSignature, SignatureExpired):
-        logger.warning("توکن تایید نامعتبر یا منقضی شده: %s", token[:20])
+        logger.warning("توکن تایید نامعتبر یا منقضی شده: %s", _token_fingerprint(token))
         return None
 
     token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
@@ -64,9 +78,9 @@ def verify_verification_token(token):
         )
         if verification_token.is_valid():
             return verification_token.user_id
-        logger.warning("توکن تایید منقضی شده در دیتابیس: %s", token[:20])
+        logger.warning("توکن تایید منقضی شده در دیتابیس: %s", _token_fingerprint(token))
     except EmailVerificationToken.DoesNotExist:
-        logger.warning("توکن تایید در دیتابیس یافت نشد: %s", token[:20])
+        logger.warning("توکن تایید در دیتابیس یافت نشد: %s", _token_fingerprint(token))
 
     return None
 

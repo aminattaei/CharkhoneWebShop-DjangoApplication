@@ -173,17 +173,3 @@ class EmailVerificationToken(models.Model):
 def create_user_profile(sender, instance, created, **kwargs):
     if created and instance.type == UserType.customer.value:
         Profile.objects.get_or_create(user=instance)
-
-
-@receiver(post_save, sender=User)
-def send_verification_email_on_create(sender, instance, created, **kwargs):
-    if created and not instance.is_verified and instance.is_active:
-        from accounts.services.verification import (
-            build_verification_link,
-            generate_verification_token,
-            send_verification_email,
-        )
-
-        token = generate_verification_token(instance)
-        link = build_verification_link(request=None, token=token)
-        send_verification_email(instance, link)

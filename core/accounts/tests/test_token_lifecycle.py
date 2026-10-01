@@ -20,8 +20,10 @@ from accounts.services.tokens import (
 )
 from accounts.services.verification import (
     VERIFICATION_MAX_AGE,
+    build_verification_link,
     generate_verification_token,
     mark_verification_token_used,
+    send_verification_email,
     verify_verification_token,
 )
 from accounts.services.verification import signer as verification_signer
@@ -343,13 +345,24 @@ class EmailVerificationTokenLifecycleTests(TestCase):
 
 @override_settings(EMAIL_BACKEND=LOCMEM)
 class EmailedVerificationTokenTests(TestCase):
-    """The token a user actually receives must be the one that verifies them."""
+    """The token a user actually receives must be the one that verifies them.
+
+    Creating a User no longer sends a verification email on its own; the
+    registration flow does it explicitly, so these tests issue the token the
+    same way that flow does.
+    """
+
+    def _register_like_signup(self, email):
+        """Create a user and send its verification email through the services."""
+        user = User.objects.create_user(email=email, password="testpass123")
+        link = build_verification_link(
+            None, generate_verification_token(user)
+        )
+        send_verification_email(user, link)
+        return user, extract_token_from_email()
 
     def test_token_from_the_sent_email_verifies_the_user(self):
-        user = User.objects.create_user(
-            email="emailed@example.com", password="testpass123"
-        )
-        emailed_token = extract_token_from_email()
+        user, emailed_token = self._register_like_signup("emailed@example.com")
         row = EmailVerificationToken.objects.get(user=user, is_used=False)
 
         # The emailed token is the real credential, not the stored hash.
@@ -369,9 +382,7 @@ class EmailedVerificationTokenTests(TestCase):
         )
 
     def test_emailed_token_cannot_be_replayed_after_confirmation(self):
-        User.objects.create_user(
-            email="replay@example.com", password="testpass123"
-        )
+        self._register_like_signup("replay@example.com")
         emailed_token = extract_token_from_email()
         url = reverse("accounts:verify-email-confirm")
 
@@ -387,10 +398,7 @@ class EmailedVerificationTokenTests(TestCase):
         )
 
     def test_tampered_emailed_token_does_not_verify_the_user(self):
-        user = User.objects.create_user(
-            email="tampered@example.com", password="testpass123"
-        )
-        emailed_token = extract_token_from_email()
+        user, emailed_token = self._register_like_signup("tampered@example.com")
 
         response = self.client.get(
             reverse("accounts:verify-email-confirm"),
