@@ -18,6 +18,7 @@ from django.urls import reverse
 from accounts.models import EmailVerificationToken
 from accounts.services.verification import (
     VERIFICATION_MAX_AGE,
+    EmailDeliveryError,
     build_verification_link,
     generate_verification_token,
     send_verification_email,
@@ -199,25 +200,22 @@ class RegistrationCreatesUserAndVerificationTests(TestCase):
         "accounts.services.verification.send_mail",
         side_effect=OSError("smtp down"),
     )
-    def test_send_verification_email_reports_failure(self, mock_send):
+    def test_send_verification_email_raises_on_delivery_failure(self, mock_send):
         user = User.objects.create_user(
             email="resent@example.com", password=VALID_PASSWORD
         )
 
-        sent = send_verification_email(user, "https://example.com/link")
+        with self.assertRaises(EmailDeliveryError):
+            send_verification_email(user, "https://example.com/link")
 
-        # assertIs, not assertFalse: returning None must not pass as a failure
-        # signal, or the caller cannot tell "failed" from "no result".
-        self.assertIs(sent, False)
-
-    def test_send_verification_email_reports_success(self):
+    def test_send_verification_email_returns_nothing_on_success(self):
         user = User.objects.create_user(
             email="ok@example.com", password=VALID_PASSWORD
         )
 
-        sent = send_verification_email(user, "https://example.com/link")
-
-        self.assertIs(sent, True)
+        self.assertIsNone(
+            send_verification_email(user, "https://example.com/link")
+        )
         self.assertEqual(len(mail.outbox), 1)
 
     @patch(
@@ -235,11 +233,8 @@ class RegistrationCreatesUserAndVerificationTests(TestCase):
         # never left in a state that blocks re-sending
         mock_send.side_effect = None
         resend_token = generate_verification_token(user)
-        sent = send_verification_email(
-            user, build_verification_link(None, resend_token)
-        )
+        send_verification_email(user, build_verification_link(None, resend_token))
 
-        self.assertTrue(sent)
         self.assertTrue(mock_send.called)
         self.assertEqual(verify_verification_token(resend_token), user.id)
 

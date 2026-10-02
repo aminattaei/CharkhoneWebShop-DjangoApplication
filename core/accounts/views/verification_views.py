@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.contrib.auth import get_user_model
@@ -6,12 +8,15 @@ from django.db import transaction
 
 from accounts.models import EmailVerificationToken
 from accounts.services.verification import (
+    EmailDeliveryError,
     build_verification_link,
     mark_verification_token_used,
     send_verification_email,
     verify_verification_token,
     generate_verification_token,
 )
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -31,7 +36,15 @@ class RequestVerificationView(View):
         user = User.objects.filter(email=email).first()
         if user and not user.is_verified:
             token = build_verification_link(request, generate_verification_token(user))
-            send_verification_email(user, token)
+            try:
+                send_verification_email(user, token)
+            except EmailDeliveryError:
+                # Recorded server side only. The reply below is identical
+                # whether the address exists or not, so a failed send cannot be
+                # used to probe which addresses are registered.
+                logger.warning(
+                    "ارسال ایمیل درخواستی برای کاربر %s ناموفق بود.", user.pk
+                )
 
         messages.success(request, "اگر ایمیل وجود داشته باشد، لینک تایید ارسال شده است.")
         return redirect("accounts:verify-email-sent")
@@ -102,7 +115,15 @@ class ResendVerificationView(View):
         user = User.objects.filter(email=email).first()
         if user and not user.is_verified:
             token = build_verification_link(request, generate_verification_token(user))
-            send_verification_email(user, token)
+            try:
+                send_verification_email(user, token)
+            except EmailDeliveryError:
+                # Recorded server side only, for the same reason as in
+                # RequestVerificationView: the reply must not reveal whether
+                # the address is registered.
+                logger.warning(
+                    "ارسال مجدد ایمیل تایید برای کاربر %s ناموفق بود.", user.pk
+                )
 
         messages.success(request, "اگر ایمیل وجود داشته باشد، لینک تایید مجددا ارسال شده است.")
         return redirect("accounts:verify-email-sent")

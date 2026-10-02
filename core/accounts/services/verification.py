@@ -1,5 +1,6 @@
 import hashlib
 import logging
+import smtplib
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -13,6 +14,22 @@ logger = logging.getLogger(__name__)
 signer = TimestampSigner()
 VERIFICATION_MAX_AGE = 12 * 3600
 
+#: The only failures that mean "the mail backend could not deliver this
+#: message". SMTPException covers the smtplib hierarchy (recipients refused,
+#: server disconnected, data rejected); OSError covers the socket layer
+#: (connection refused, DNS failure, timeout). Both are transient and depend on
+#: the mail server's state, not on this code.
+DELIVERY_FAILURES = (smtplib.SMTPException, OSError)
+
+
+class EmailDeliveryError(Exception):
+    """The verification message could not be handed to the mail backend.
+
+    Raised only for :data:`DELIVERY_FAILURES`. Callers must handle it, because
+    swallowing it again would hide real outages. Every other exception is a bug
+    or a deployment problem and is deliberately left to propagate.
+    """
+
 
 def _token_fingerprint(token):
     """Non-reversible short identifier safe to write to logs."""
@@ -25,12 +42,13 @@ def build_verification_link(request, token):
 
 
 def send_verification_email(user, verification_link):
-    """Send the verification email and report whether it was actually sent.
+    """Send the verification email.
 
-    Returns True when the message was handed to the mail backend, False when
-    sending failed. The failure is logged, never raised, so that a mail outage
-    cannot roll back a committed registration; callers are expected to surface
-    the False result to the user instead of assuming delivery.
+    Raises :class:`EmailDeliveryError` when the backend could not deliver the
+    message. Delivery failures are transient, so they must not roll back an
+    already committed registration; callers surface them to the user instead.
+    Any other exception is a programming error or a misconfiguration, is not
+    converted into a delivery failure, and propagates with its traceback.
     """
     email = user.email
     profile = getattr(user, "profile", None)
@@ -48,11 +66,15 @@ def send_verification_email(user, verification_link):
             recipient_list=[email],
             fail_silently=False,
         )
-        logger.info("ایمیل تایید با موفقیت به %s ارسال شد.", email)
-        return True
-    except Exception as e:
-        logger.error("خطا در ارسال ایمیل تایید به %s: %s", email, e)
-        return False
+    except DELIVERY_FAILURES as exc:
+        # The exception text is the mail server's own reply, never the message
+        # body, so logging it is safe; the link is deliberately not logged.
+        logger.error("خطا در ارسال ایمیل تایید به %s: %s", email, exc)
+        raise EmailDeliveryError(
+            f"verification email could not be delivered to {email}"
+        ) from exc
+
+    logger.info("ایمیل تایید با موفقیت به %s ارسال شد.", email)
 
 
 def generate_verification_token(user):

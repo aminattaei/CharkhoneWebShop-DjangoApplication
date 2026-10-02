@@ -9,6 +9,7 @@ from django.shortcuts import render, redirect
 
 from ..forms import AuthenticationForm, RegisterForm
 from ..services.verification import (
+    EmailDeliveryError,
     build_verification_link,
     generate_verification_token,
     send_verification_email,
@@ -72,26 +73,37 @@ class RegisterView(View):
                 # kept in memory and emailed after the commit.
                 verification_token = generate_verification_token(user)
 
-            verification_sent = send_verification_email(
-                user, build_verification_link(request, verification_token)
-            )
+            # The user and its token are already committed, so a delivery
+            # failure must not be turned into a crash: the account stays valid
+            # and unverified, and the user is told to request a new link.
+            try:
+                send_verification_email(
+                    user, build_verification_link(request, verification_token)
+                )
+            except EmailDeliveryError:
+                logger.warning(
+                    "ثبت نام کاربر %s انجام شد اما ایمیل تایید ارسال نشد.", user.pk
+                )
+                delivery_failed = True
+            else:
+                delivery_failed = False
 
             # Log the user in automatically after registration
             login(request, user)
-            
+
             # Merge session cart to user's cart
             merge_session_cart_to_user(request, user)
 
-            if verification_sent:
-                messages.success(
-                    request,
-                    "ثبت نام شما با موفقیت انجام شد. لطفاً ایمیل خود را بررسی کنید.",
-                )
-            else:
+            if delivery_failed:
                 messages.warning(
                     request,
                     "ثبت نام انجام شد، اما ارسال ایمیل تایید ممکن نشد. "
                     "لطفاً از صفحه ارسال مجدد ایمیل تایید استفاده کنید.",
+                )
+            else:
+                messages.success(
+                    request,
+                    "ثبت نام شما با موفقیت انجام شد. لطفاً ایمیل خود را بررسی کنید.",
                 )
             return redirect("accounts:login")
 
