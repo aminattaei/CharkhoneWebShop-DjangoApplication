@@ -87,6 +87,7 @@ class Newsletter(models.Model):
     STATUS_CHOICES = [
         ('draft', 'Draft'),
         ('scheduled', 'Scheduled'),
+        ('partially_sent', 'Partially Sent'),
         ('sent', 'Sent'),
         ('failed', 'Failed'),
     ]
