@@ -32,7 +32,7 @@ class Cart(models.Model):
 
     def add_item(self, product_id, quantity=1):
         """Add or update an item in the cart."""
-        cart_item, created = self.items.get_or_create(
+        cart_item, created = self.line_items.get_or_create(
             product_id=product_id,
             defaults={'quantity': quantity}
         )
@@ -52,24 +52,24 @@ class Cart(models.Model):
         """Return list of dicts with product_id and quantity for compatibility with CartSession."""
         return [
             {"product_id": item.product_id, "quantity": item.quantity}
-            for item in self.items.all()
+            for item in self.line_items.all()
         ]
 
     @property
     def total_items(self):
-        return sum(item.quantity for item in self.items.all())
+        return sum(item.quantity for item in self.line_items.all())
 
     @property
     def total_price(self):
         total = 0
-        for item in self.items.all():
+        for item in self.line_items.all():
             if item.product:
                 total += item.product.final_price * item.quantity
         return total
 
 
 class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
+    cart = models.ForeignKey(Cart, related_name='line_items', on_delete=models.CASCADE)
     product = models.ForeignKey(ProductModel, related_name='cart_items', on_delete=models.PROTECT)
     quantity = models.PositiveIntegerField(default=0)
 
