@@ -21,6 +21,24 @@ class CartSession:
             self._cart["items"].append(new_product)
         self._update_totals()
 
+    def update_quantity(self, product_id, quantity):
+        """Update the quantity of an existing cart item.
+
+        Raises ``KeyError`` when the product is not in the cart.
+        Raises ``ValueError`` when ``quantity`` is less than 1.
+        """
+        if quantity < 1:
+            raise ValueError("تعداد محصول نامعتبر است.")
+
+        for item in self._cart['items']:
+            if item["product_id"] == product_id:
+                item["quantity"] = quantity
+                break
+        else:
+            raise KeyError("محصول در سبد خرید وجود ندارد.")
+
+        self._update_totals()
+
     def _update_totals(self):
         from shop.models import ProductModel
         product_ids = [item["product_id"] for item in self._cart["items"]]
@@ -57,5 +75,6 @@ class CartSession:
             "total_price": 0,
             "total_items": 0
         }
+        self.session["cart"] = self._cart
         self.save()
 

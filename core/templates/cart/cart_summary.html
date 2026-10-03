@@ -1,0 +1,342 @@
+{% extends 'website/base.html' %}
+{% load static %}
+{% load cart_tags %}
+
+{% block title %}
+    خلاصه سبد خرید شما
+{% endblock title %}
+
+{% block content %}
+
+<div class="container content-space-1 content-space-lg-2">
+    <div class="row">
+
+        <!-- Cart Items -->
+        <div class="col-lg-8 mb-7 mb-lg-0">
+
+            <div class="d-flex justify-content-between align-items-end border-bottom pb-3 mb-7">
+                <h1 class="h3 mb-0">سبد خرید</h1>
+                <span id="cart-total-items">{{ cart.total_items }} مورد</span>
+            </div>
+
+            <ul class="list-group list-group-flush list-group-no-gutters mb-5">
+
+                {% for item in cart.items %}
+
+                    {% with product=item.product_id|get_product_from_id %}
+
+                        <li class="list-group-item py-4 cart-item"
+                            data-product-id="{{ product.id }}">
+
+                            <div class="row align-items-center">
+
+                                <!-- Product Image -->
+                                <div class="col-auto">
+                                    <div class="avatar avatar-xl avatar-4x3">
+
+                                        {% if product.image %}
+                                            <img
+                                                class="avatar-img"
+                                                src="{{ product.image.url }}"
+                                                alt="{{ product.title }}"
+                                            >
+                                        {% else %}
+                                            <img
+                                                class="avatar-img"
+                                                src="{% static 'website/img/placeholder.jpg' %}"
+                                                alt="تصویر محصول موجود نیست"
+                                            >
+                                        {% endif %}
+
+                                    </div>
+                                </div>
+
+                                <!-- Product Information -->
+                                <div class="col">
+
+                                    <div class="row">
+
+                                        <!-- Product Details -->
+                                        <div class="col-md-7 mb-3 mb-md-0">
+
+                                            <h5 class="mb-1">
+                                                <a class="text-dark" href="#">
+                                                    {{ product.title }}
+                                                </a>
+                                            </h5>
+
+                                            <div class="text-body mb-2">
+                                                <span class="small">دسته‌بندی:</span>
+
+                                                <span class="fw-semibold small">
+                                                    {{ product.category }}
+                                                </span>
+                                            </div>
+
+                                        </div>
+
+                                        <!-- Quantity -->
+                                        <div class="col-md-3 mb-3 mb-md-0">
+
+                                            <label
+                                                class="form-label small mb-1"
+                                                for="quantity-{{ product.id }}"
+                                            >
+                                                تعداد
+                                            </label>
+
+                                            <select
+                                                id="quantity-{{ product.id }}"
+                                                class="form-select form-select-sm product-quantity"
+                                                data-product-id="{{ product.id }}"
+                                            >
+
+                                                {% for quantity in "1234567890" %}
+
+                                                    {% with current_quantity=forloop.counter %}
+
+                                                        <option
+                                                            value="{{ current_quantity }}"
+                                                            {% if item.quantity == current_quantity %}
+                                                                selected
+                                                            {% endif %}
+                                                        >
+                                                            {{ current_quantity }}
+                                                        </option>
+
+                                                    {% endwith %}
+
+                                                {% endfor %}
+
+                                            </select>
+
+                                        </div>
+
+                                        <!-- Product Price -->
+                                        <div class="col-md-2 text-md-end">
+
+                                            <span
+                                                class="h5 d-block mb-1 product-price"
+                                                data-product-id="{{ product.id }}"
+                                            >
+                                                {{ product.final_price }} تومان
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                    <!-- Actions -->
+                                    <div class="d-flex gap-3 mt-3">
+
+                                        <a
+                                            class="link-sm link-secondary small"
+                                            href="javascript:;"
+                                        >
+                                            <i class="bi-trash me-1"></i>
+                                            حذف
+                                        </a>
+
+                                        <a
+                                            class="link-sm link-secondary small"
+                                            href="javascript:;"
+                                        >
+                                            <i class="bi-heart-fill me-1"></i>
+                                            جزو علایق
+                                        </a>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </li>
+
+                    {% endwith %}
+
+                {% empty %}
+
+                    <li class="list-group-item text-center py-5">
+                        <p class="mb-0">
+                            سبد خرید شما خالی است.
+                        </p>
+                    </li>
+
+                {% endfor %}
+
+            </ul>
+
+            <!-- Continue Shopping -->
+            <div class="d-sm-flex justify-content-end">
+                <a class="link" href="{% url 'shop:product_list' %}">
+                    به خرید ادامه دهید
+                    <i class="bi-chevron-left small ms-1"></i>
+                </a>
+            </div>
+
+        </div>
+
+
+        <!-- Cart Summary -->
+        <div class="col-lg-4">
+
+            <div class="ps-lg-4">
+
+                <div class="card card-sm shadow-sm mb-4">
+
+                    <div class="card-body">
+
+                        <div class="border-bottom pb-4 mb-4">
+                            <h3 class="card-header-title">
+                                خلاصه هزینه
+                            </h3>
+                        </div>
+
+                        <div class="d-grid gap-3 mb-4">
+
+                            <!-- Total Items -->
+                            <dl class="row">
+                                <dt class="col-sm-6">
+                                    تعداد کالا
+                                </dt>
+
+                                <dd
+                                    id="summary-total-items"
+                                    class="col-sm-6 text-sm-end mb-0"
+                                >
+                                    {{ cart.total_items }}
+                                </dd>
+                            </dl>
+
+                            <!-- Tax -->
+                            <dl class="row">
+                                <dt class="col-sm-6">
+                                    مالیات
+                                </dt>
+
+                                <dd class="col-sm-6 text-sm-end mb-0">
+                                    به همراه 9% در هنگام پرداخت
+                                </dd>
+                            </dl>
+
+                            <!-- Total -->
+                            <dl class="row">
+                                <dt class="col-sm-6">
+                                    جمع
+                                </dt>
+
+                                <dd
+                                    id="cart-total-price"
+                                    class="col-sm-6 text-sm-end mb-0"
+                                >
+                                    {{ cart.total_price }} تومان
+                                </dd>
+                            </dl>
+
+                        </div>
+
+                        <!-- Checkout -->
+                        <div class="d-grid">
+                            <a
+                                class="btn btn-primary btn-lg"
+                                href="{% url 'cart:cart_chechout' %}"
+                            >
+                                ثبت سفارش
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- Support -->
+                <div class="d-flex align-items-center">
+
+                    <div class="flex-shrink-0">
+                        <div class="svg-icon svg-icon-sm text-primary">
+                            <!-- SVG اصلی قالب -->
+                        </div>
+                    </div>
+
+                    <div class="flex-grow-1 ms-2">
+                        <span class="small me-1">
+                            نیاز به پشتیبانی دارید؟
+                        </span>
+
+                        <a class="link small" href="{% url 'website:contact_page' %}">
+                            ارسال تیکت
+                        </a>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<script>
+$(function () {
+  const csrfToken = $('meta[name="csrf-token"]').attr('content') || '';
+
+  function updateCartTotals(data) {
+    $('#cart-total-items').text(data.total_items + ' مورد');
+    $('#summary-total-items').text(data.total_items);
+    $('#cart-total-price').text(data.total_price + ' تومان');
+  }
+
+  function showError(message) {
+    console.error('Cart quantity update error:', message);
+    alert(message || 'خطا در بروزرسانی سبد خرید.');
+  }
+
+  $('.product-quantity').on('change', function () {
+    const select = $(this);
+    const productId = select.data('product-id');
+    const quantity = parseInt(select.val(), 10);
+
+    if (!productId || isNaN(quantity) || quantity < 1) {
+      showError('تعداد نامعتبر است.');
+      return;
+    }
+
+    if (select.data('request-in-flight')) {
+      return;
+    }
+    select.data('request-in-flight', true);
+
+    $.ajax({
+      url: "{% url 'cart:update_quantity' %}",
+      method: 'POST',
+      contentType: 'application/json',
+      headers: { 'X-CSRFToken': csrfToken },
+      data: JSON.stringify({ product_id: productId, quantity: quantity }),
+      dataType: 'json',
+      success: function (data) {
+        if (data.success) {
+          updateCartTotals(data);
+        } else {
+          showError(data.message || 'خطا در بروزرسانی سبد خرید.');
+          select.val(select.data('previous-value'));
+        }
+      },
+      error: function (xhr) {
+        const message = (xhr.responseJSON && xhr.responseJSON.message)
+          || ('HTTP ' + xhr.status);
+        showError(message);
+        select.val(select.data('previous-value'));
+      },
+      complete: function () {
+        select.data('request-in-flight', false);
+      }
+    });
+  });
+
+  $('.product-quantity').each(function () {
+    $(this).data('previous-value', $(this).val());
+  });
+});
+</script>
+
+{% endblock content %}
