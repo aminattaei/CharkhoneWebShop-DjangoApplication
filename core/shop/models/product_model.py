@@ -46,7 +46,7 @@ class ProductModel(models.Model):
     title = models.CharField(max_length=255)
     slug = models.SlugField(allow_unicode=True, unique=True, max_length=255)
     image = models.ImageField(
-        default="defaults/default_image.png",
+        default="product/img/default_image.png",
         upload_to="product/img/",
     )
     description = models.TextField()

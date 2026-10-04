@@ -97,7 +97,7 @@ class NewsletterService:
             'unsubscribe_url': unsubscribe_url,
         }
         
-        html_content = render_to_string('newsletter/email.html', context)
+        html_content = render_to_string('shop/newsletter/email.html', context)
         
         plain_text = newsletter.plain_text_content or strip_tags(html_content)
         

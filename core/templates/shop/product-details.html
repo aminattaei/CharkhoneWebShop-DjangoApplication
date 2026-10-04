@@ -1,6 +1,5 @@
 {% extends 'website/base.html' %}
-{% load static %}
-{% load shop_tags %}
+{% load static humanize shop_tags%}
 
 {% block title %}
 جزییات {{ product }}
@@ -106,9 +105,9 @@
         <div class="mb-5">
           <span class="d-block mb-2">قیمت کل:</span>
           <div class="d-flex align-items-center">
-            <h3 class="mb-0">{{ product.final_price|floatformat:0 }} تومان</h3>
+            <h3 class="mb-0">{{ product.final_price|floatformat:0|intcomma }}تومان</h3>
             {% if product.discount_percent > 0 %}
-            <span class="ms-2"><del>{{ product.price|floatformat:0 }}</del></span>
+            <span class="ms-2"><del>{{ product.price|floatformat:0|intcomma }}</del></span>
             {% endif %}
           </div>
         </div>

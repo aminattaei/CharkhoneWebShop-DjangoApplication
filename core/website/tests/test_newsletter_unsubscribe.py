@@ -5,6 +5,7 @@ knew a subscriber's address could cancel their subscription. Authorization now
 requires a signed, time-limited token that carries only the subscriber pk.
 """
 
+import re
 import time
 from unittest.mock import patch
 
@@ -257,26 +258,44 @@ class UnsubscribeTokenTests(TestCase):
             newsletter=newsletter, subscriber=self.subscriber
         )
 
-        # services.py renders 'newsletter/email.html', which lives under
-        # shop/newsletter/ on disk, so the template lookup is stubbed here to
-        # assert on the context the email is generated with.
-        with patch(
-            "website.services.render_to_string", return_value="<p>html</p>"
-        ) as render:
-            NewsletterService._send_email(recipient)
+        NewsletterService._send_email(recipient)
 
         self.assertEqual(len(mail.outbox), 1)
-        context = render.call_args[0][1]
-        unsubscribe_url = context["unsubscribe_url"]
+        html_body = mail.outbox[0].alternatives[0][0]
+        match = re.search(r"unsubscribe/\?token=([^\s\"'<>]+)", html_body)
+        self.assertIsNotNone(match, "unsubscribe link not found in email HTML")
+        token = match.group(1)
 
-        self.assertIn("token=", unsubscribe_url)
-        self.assertNotIn(self.subscriber.email, unsubscribe_url)
-        self.assertNotIn("email=", unsubscribe_url)
-
-        token = unsubscribe_url.split("token=")[1]
+        self.assertNotIn(self.subscriber.email, token)
+        self.assertNotIn("email=", token)
         self.assertEqual(unsubscribe_token_subject(token), self.subscriber.pk)
 
     def test_unsubscribe_token_does_not_leak_email(self):
         token = generate_unsubscribe_token(self.subscriber.pk)
 
         self.assertNotIn(self.subscriber.email, token)
+
+
+class NewsletterEmailTemplatePathTests(TestCase):
+    """Regression: _send_email must render the real template without stubbing."""
+
+    @override_settings(EMAIL_BACKEND=LOCMEM)
+    def test_send_email_renders_real_template_without_stubbing(self):
+        subscriber = Subscriber.objects.create(
+            email="render@example.com", is_active=True, is_verified=True
+        )
+        newsletter = Newsletter.objects.create(
+            subject="اخبار", preview_text="خلاصه", content="<p>متن</p>"
+        )
+        recipient = NewsletterRecipient.objects.create(
+            newsletter=newsletter, subscriber=subscriber
+        )
+
+        # No patch on render_to_string — the service must find the template
+        # on its own.
+        NewsletterService._send_email(recipient)
+
+        self.assertEqual(len(mail.outbox), 1)
+        body = mail.outbox[0].body
+        self.assertIn(newsletter.subject, body)
+        self.assertIn("Unsubscribe", body)

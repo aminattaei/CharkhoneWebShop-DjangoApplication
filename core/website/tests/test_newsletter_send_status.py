@@ -36,21 +36,15 @@ def make_subscribers(count, **kwargs):
 
 
 def send_with_failures(newsletter, failing_emails):
-    """Run a real send where only the given recipient addresses fail.
-
-    services.py renders 'newsletter/email.html', which lives under
-    shop/newsletter/ on disk, so the template lookup is stubbed to isolate the
-    delivery-status behaviour from that separate template-path bug.
-    """
+    """Run a real send where only the given recipient addresses fail."""
 
     def fake_send(self, *args, **kwargs):
         if self.to[0] in failing_emails:
             raise Exception("smtp refused")
         return 1
 
-    with patch("website.services.render_to_string", return_value="<p>html</p>"):
-        with patch("django.core.mail.EmailMultiAlternatives.send", fake_send):
-            NewsletterService.send_newsletter(newsletter)
+    with patch("django.core.mail.EmailMultiAlternatives.send", fake_send):
+        NewsletterService.send_newsletter(newsletter)
     newsletter.refresh_from_db()
 
 
@@ -309,18 +303,16 @@ class EmailFailureHandlingTests(TestCase):
     def test_send_email_returns_true_on_success(self):
         recipient = self._existing_recipient()
 
-        with patch("website.services.render_to_string", return_value="<p>h</p>"):
-            self.assertIs(NewsletterService._send_email(recipient), True)
+        self.assertIs(NewsletterService._send_email(recipient), True)
 
     def test_send_email_returns_false_and_records_bounced_on_failure(self):
         recipient = self._existing_recipient()
 
-        with patch("website.services.render_to_string", return_value="<p>h</p>"):
-            with patch(
-                "django.core.mail.EmailMultiAlternatives.send",
-                side_effect=Exception("smtp refused"),
-            ):
-                result = NewsletterService._send_email(recipient)
+        with patch(
+            "django.core.mail.EmailMultiAlternatives.send",
+            side_effect=Exception("smtp refused"),
+        ):
+            result = NewsletterService._send_email(recipient)
 
         self.assertIs(result, False)
         recipient.refresh_from_db()
@@ -331,12 +323,11 @@ class EmailFailureHandlingTests(TestCase):
 
         recipient = self._existing_recipient()
 
-        with patch("website.services.render_to_string", return_value="<p>h</p>"):
-            with patch(
-                "django.core.mail.EmailMultiAlternatives.send",
-                side_effect=smtplib.SMTPRecipientsRefused({}),
-            ):
-                result = NewsletterService._send_email(recipient)
+        with patch(
+            "django.core.mail.EmailMultiAlternatives.send",
+            side_effect=smtplib.SMTPRecipientsRefused({}),
+        ):
+            result = NewsletterService._send_email(recipient)
 
         self.assertIs(result, False)
         recipient.refresh_from_db()
@@ -354,9 +345,8 @@ class EmailFailureHandlingTests(TestCase):
             email="other@example.com", is_active=True, is_verified=True
         )
 
-        with patch("website.services.render_to_string", return_value="<p>h</p>"):
-            with patch("django.core.mail.EmailMultiAlternatives.send", fake_send):
-                NewsletterService.send_newsletter(self.newsletter)
+        with patch("django.core.mail.EmailMultiAlternatives.send", fake_send):
+            NewsletterService.send_newsletter(self.newsletter)
         self.newsletter.refresh_from_db()
 
         rows = NewsletterRecipient.objects.filter(newsletter=self.newsletter)
