@@ -4,9 +4,114 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model
 from datetime import datetime
 from django.core.validators import EmailValidator
+import html
+import re
+import urllib.parse
 
 
 User = get_user_model()
+
+
+class HTMLSanitizer(html.parser.HTMLParser):
+    """Minimal HTML sanitizer for newsletter content.
+
+    Strips dangerous tags, event-handler attributes, and non-http URL schemes
+    while preserving the safe formatting elements a newsletter author needs.
+    """
+
+    ALLOWED_TAGS = {
+        "p", "div", "span", "br", "hr",
+        "h1", "h2", "h3", "h4", "h5", "h6",
+        "strong", "em", "u", "b", "i", "small",
+        "a", "ul", "ol", "li",
+        "img", "table", "tr", "td", "th", "thead", "tbody",
+    }
+
+    ALLOWED_ATTRS = {
+        "a": {"href", "title", "target"},
+        "img": {"src", "alt", "title", "width", "height"},
+        "*": {"class"},
+    }
+
+    SAFE_PROTOCOLS = ("http", "https", "mailto")
+
+    def __init__(self):
+        super().__init__()
+        self.output = []
+        self._skip_tag = None
+        self._skip_depth = 0
+
+    def _safe_url(self, value):
+        if not value:
+            return False
+        scheme = urllib.parse.urlparse(value).scheme.lower()
+        return scheme in self.SAFE_PROTOCOLS
+
+    def _filtered_attrs(self, tag, attrs):
+        allowed = self.ALLOWED_ATTRS.get("*", set()) | self.ALLOWED_ATTRS.get(
+            tag, set()
+        )
+        result = []
+        for name, value in attrs:
+            if name not in allowed:
+                continue
+            if name in ("href", "src") and not self._safe_url(value):
+                continue
+            result.append(
+                f' {name}="{html.escape(value, quote=True)}"'
+                if value is not None
+                else f" {name}"
+            )
+        return result
+
+    def handle_starttag(self, tag, attrs):
+        if tag not in self.ALLOWED_TAGS:
+            self._skip_tag = tag
+            self._skip_depth = 1
+            return
+        if self._skip_tag:
+            self._skip_depth += 1
+            return
+        parts = self._filtered_attrs(tag, attrs)
+        self.output.append(f"<{tag}{''.join(parts)}>")
+
+    def handle_endtag(self, tag):
+        if self._skip_tag:
+            if tag == self._skip_tag:
+                self._skip_depth -= 1
+                if self._skip_depth == 0:
+                    self._skip_tag = None
+            return
+        if tag in self.ALLOWED_TAGS:
+            self.output.append(f"</{tag}>")
+
+    def handle_startendtag(self, tag, attrs):
+        if tag not in self.ALLOWED_TAGS or self._skip_tag:
+            return
+        parts = self._filtered_attrs(tag, attrs)
+        self.output.append(f"<{tag}{''.join(parts)}/>")
+
+    def handle_data(self, data):
+        if not self._skip_tag:
+            self.output.append(html.escape(data, quote=True))
+
+    def get_html(self):
+        return "".join(self.output)
+
+
+def sanitize_newsletter_html(content):
+    """Sanitize newsletter HTML at the model boundary.
+
+    The newsletter content field is intentionally rich HTML authored by staff.
+    This function preserves safe formatting while removing active-content
+    vectors (script, event handlers, javascript:/data: URLs, etc.).
+    """
+    if not content:
+        return content
+    parser = HTMLSanitizer()
+    parser.feed(content)
+    return parser.get_html()
+
 
 class ContactModel(models.Model):
     name = models.CharField(max_length=100)
@@ -157,6 +262,11 @@ class Newsletter(models.Model):
     def get_recipient_count(self):
         """Get the number of active subscribers."""
         return Subscriber.objects.filter(is_active=True).count()
+
+    def save(self, *args, **kwargs):
+        if self.content:
+            self.content = sanitize_newsletter_html(self.content)
+        super().save(*args, **kwargs)
 
 
 class NewsletterRecipient(models.Model):

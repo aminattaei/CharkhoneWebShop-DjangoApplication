@@ -354,3 +354,76 @@ class EmailFailureHandlingTests(TestCase):
         self.assertEqual(rows.filter(status="bounced").count(), 1)
         self.assertEqual(rows.filter(status="sent").count(), 2)
         self.assertEqual(self.newsletter.status, "partially_sent")
+
+
+class NewsletterContentSanitizationTests(TestCase):
+    """Newsletter HTML content must be sanitized at the model boundary."""
+
+    def test_safe_html_is_preserved(self):
+        newsletter = Newsletter.objects.create(
+            subject="t", preview_text="p", content="<p>Hello <b>world</b></p>"
+        )
+        self.assertEqual(newsletter.content, "<p>Hello <b>world</b></p>")
+
+    def test_script_tags_are_stripped(self):
+        newsletter = Newsletter.objects.create(
+            subject="t",
+            preview_text="p",
+            content="<p>safe</p><script>alert(1)</script>",
+        )
+        self.assertNotIn("<script>", newsletter.content)
+        self.assertIn("<p>safe</p>", newsletter.content)
+
+    def test_event_handler_attributes_are_stripped(self):
+        newsletter = Newsletter.objects.create(
+            subject="t",
+            preview_text="p",
+            content='<div onclick="alert(1)">text</div>',
+        )
+        self.assertNotIn("onclick", newsletter.content)
+        self.assertIn("<div>", newsletter.content)
+
+    def test_javascript_url_is_rejected(self):
+        newsletter = Newsletter.objects.create(
+            subject="t",
+            preview_text="p",
+            content='<a href="javascript:alert(1)">click</a>',
+        )
+        self.assertNotIn("javascript:", newsletter.content)
+        self.assertIn("<a>", newsletter.content)
+
+    def test_safe_https_link_is_preserved(self):
+        newsletter = Newsletter.objects.create(
+            subject="t",
+            preview_text="p",
+            content='<a href="https://example.com">link</a>',
+        )
+        self.assertIn('href="https://example.com"', newsletter.content)
+
+    def test_data_url_is_rejected(self):
+        newsletter = Newsletter.objects.create(
+            subject="t",
+            preview_text="p",
+            content='<img src="data:text/html,<script>alert(1)</script>">',
+        )
+        self.assertNotIn("data:", newsletter.content)
+
+    def test_rendered_email_does_not_reintroduce_script(self):
+        subscriber = Subscriber.objects.create(
+            email="render@example.com", is_active=True, is_verified=True
+        )
+        newsletter = Newsletter.objects.create(
+            subject="t", preview_text="p", content="<p>ok</p><script>alert(1)</script>"
+        )
+        recipient = NewsletterRecipient.objects.create(
+            newsletter=newsletter, subscriber=subscriber
+        )
+
+        NewsletterService._send_email(recipient)
+
+        self.assertEqual(len(mail.outbox), 1)
+        html_body = mail.outbox[0].alternatives[0][0]
+        # The base template contains its own scripts; assert only that the
+        # injected payload from the newsletter content did not survive.
+        self.assertIn("<p>ok</p>", html_body)
+        self.assertNotIn("alert(1)", html_body)

@@ -14,7 +14,11 @@ exclude =
 
 extend-ignore =
     E203,
-    W503
+    W503,
+    W291,
+    W292,
+    W293,
+    W391
 
 show-source = true
 count = true

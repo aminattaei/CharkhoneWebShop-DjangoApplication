@@ -12,18 +12,18 @@ from .models import (
 User = get_user_model()
 
 
-# ============================================================
+#============================================================
 # Django Admin Configuration
-# ============================================================
+#============================================================
 
 admin.site.site_title = "Charkhoneh Site Admin (DEV)"
 admin.site.site_header = "Charkhoneh Administration"
 admin.site.index_title = "Charkhoneh Site Administration"
 
 
-# ============================================================
+#============================================================
 # User Admin
-# ============================================================
+#============================================================
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
@@ -143,9 +143,9 @@ class CustomUserAdmin(UserAdmin):
     )
 
 
-# ============================================================
+#============================================================
 # Profile Admin
-# ============================================================
+#============================================================
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
@@ -175,9 +175,9 @@ class ProfileAdmin(admin.ModelAdmin):
     )
 
 
-# ============================================================
+#============================================================
 # Password Reset Token Admin
-# ============================================================
+#============================================================
 
 @admin.register(PasswordResetToken)
 class PasswordResetTokenAdmin(admin.ModelAdmin):
@@ -211,9 +211,9 @@ class PasswordResetTokenAdmin(admin.ModelAdmin):
     )
 
 
-# ============================================================
+#============================================================
 # Django Session Admin
-# ============================================================
+#============================================================
 
 class SessionAdmin(admin.ModelAdmin):
     def _session_data(self, obj):
@@ -222,9 +222,11 @@ class SessionAdmin(admin.ModelAdmin):
     readonly_fields = ['_session_data']
 admin.site.register(Session, SessionAdmin)
 
-# ============================================================
+
+#============================================================
 # Email Verification Token Admin
-# ============================================================
+#============================================================
+
 
 @admin.register(EmailVerificationToken)
 class EmailVerificationTokenAdmin(admin.ModelAdmin):
