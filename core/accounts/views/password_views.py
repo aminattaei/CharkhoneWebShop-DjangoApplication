@@ -3,6 +3,7 @@ from django.shortcuts import redirect, render
 from django.views import View
 from django.views.generic import TemplateView
 from django.core.cache import cache
+from django.db import transaction
 
 from accounts.services.password_reset import (
     request_password_reset,
@@ -20,6 +21,7 @@ class PasswordResetRequestView(View):
     def get(self, request):
         return render(request, self.template_name)
 
+    @transaction.atomic
     def post(self, request):
         email = request.POST.get("email", "").strip()
         if not email:
