@@ -228,9 +228,6 @@ CharkhoneApplication-django/
 │   └── dev/
 │       └── django/
 │
-├── postgres/
-│   └── data/                    # Local PostgreSQL data
-│
 ├── docs/                        # Project documentation and diagrams
 ├── docker-compose.yml
 ├── pytest.ini
