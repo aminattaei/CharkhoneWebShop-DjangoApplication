@@ -51,7 +51,7 @@ class Cart(models.Model):
     def items(self):
         """Return list of dicts with product_id and quantity for compatibility with CartSession."""
         return [
-            {"product_id": item.product_id, "quantity": item.quantity}
+            {"product_id": str(item.product_id), "quantity": item.quantity}
             for item in self.line_items.all()
         ]
 

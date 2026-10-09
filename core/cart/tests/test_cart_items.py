@@ -81,7 +81,7 @@ class CartItemsApiTests(TestCase):
             (entry["product_id"], entry["quantity"]) for entry in self.cart.items
         )
         from_manager = sorted(
-            (item.product_id, item.quantity) for item in self.cart.line_items.all()
+            (str(item.product_id), item.quantity) for item in self.cart.line_items.all()
         )
 
         self.assertEqual(from_property, from_manager)
@@ -122,7 +122,7 @@ class CartItemsApiTests(TestCase):
 
         self.assertEqual(
             self.cart.items,
-            [{"product_id": self.first.pk, "quantity": 2}],
+            [{"product_id": str(self.first.pk), "quantity": 2}],
         )
 
     def test_items_is_empty_for_a_new_cart(self):
@@ -175,7 +175,7 @@ class CartItemsApiTests(TestCase):
         self.assertEqual(self.cart.total_items, 2)
         self.assertEqual(
             sorted(entry["product_id"] for entry in self.cart.items),
-            sorted([self.first.pk, self.second.pk]),
+            sorted([str(self.first.pk), str(self.second.pk)]),
         )
 
     def test_merge_session_cart_preserves_session_quantities(self):

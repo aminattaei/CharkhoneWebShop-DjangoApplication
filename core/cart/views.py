@@ -49,7 +49,7 @@ class CartAddToCartView(View):
         return JsonResponse({
             "detail": "محصول به سبد خرید اضافه شد.",
             "total_items": cart.total_items,
-            "total_price": cart.total_price,
+            "total_price": int(cart.total_price),
             "product_title": product.title,
         })
 
@@ -102,7 +102,7 @@ def update_quantity(request):
         return JsonResponse({
             "success": True,
             "total_items": cart.total_items,
-            "total_price": cart.total_price,
+            "total_price": int(cart.total_price),
         })
 
     except json.JSONDecodeError:
