@@ -1,24 +1,110 @@
-# CharkhoneApplication-Django
+# CharkhonehApplication-Django
 
-Charkhone Online Shop — A Django e-commerce project with Docker
+**Charkhone Online Shop — Django E-Commerce Application**
+
+A production-oriented Django e-commerce application built with a **modular monolith architecture**, PostgreSQL, Docker, Django REST Framework, and automated testing.
+
+The project is being developed as both a functional online shop and a software-engineering portfolio project, with particular focus on authentication, data integrity, security, concurrency, testing, and maintainable architecture.
+
+---
 
 ## Table of Contents
 
-* [About](#about)
+- [CharkhonehApplication-Django](#charkhonehapplication-django)
+  - [Table of Contents](#table-of-contents)
+- [Overview](#overview)
+  - [What is Charkhoneh?](#what-is-charkhoneh)
+  - [Database Schema](#database-schema)
+  - [Target Users](#target-users)
+  - [Project Goal](#project-goal)
+- [Product Snapshot](#product-snapshot)
+    - [Current Product State](#current-product-state)
+- [Product Flow](#product-flow)
+    - [Current implementation status](#current-implementation-status)
+- [Features](#features)
+  - [Authentication \& Account Management](#authentication--account-management)
+  - [Product Catalog](#product-catalog)
+  - [Shopping Cart](#shopping-cart)
+  - [Newsletter](#newsletter)
+  - [API](#api)
+  - [Testing](#testing)
+- [Demo](#demo)
+  - [Video Example](#video-example)
+  - [Image Example](#image-example)
+- [Requirements](#requirements)
+- [Configuration](#configuration)
+- [Installation](#installation)
+  - [1. Clone the repository](#1-clone-the-repository)
+  - [2. Configure environment variables](#2-configure-environment-variables)
+  - [3. Build and start the development environment](#3-build-and-start-the-development-environment)
+  - [4. Check running containers](#4-check-running-containers)
+  - [5. Apply migrations](#5-apply-migrations)
+  - [6. Create a superuser](#6-create-a-superuser)
+- [Usage](#usage)
+  - [Application](#application)
+  - [Django Management Commands](#django-management-commands)
+  - [Lint and Reformat + Pre-commit (Optional)](#lint-and-reformat--pre-commit-optional)
+  - [Documentation](#documentation)
+  - [Testing](#testing-1)
+    - [Testing Philosophy](#testing-philosophy)
+- [Project Structure](#project-structure)
+- [Architecture](#architecture)
+  - [Architectural Approach](#architectural-approach)
+    - [Why a Modular Monolith?](#why-a-modular-monolith)
+- [Engineering Highlights](#engineering-highlights)
+  - [Database Integrity](#database-integrity)
+  - [Concurrency Safety](#concurrency-safety)
+  - [Security](#security)
+  - [Regression Testing](#regression-testing)
+- [ERD / Database Schema](#erd--database-schema)
+- [Deployment](#deployment)
+    - [Production Deployment](#production-deployment)
+- [Known Issues](#known-issues)
+- [References and Definitions (Optional)](#references-and-definitions-optional)
+  - [Modular Monolith](#modular-monolith)
+  - [Data Integrity](#data-integrity)
+  - [Concurrency](#concurrency)
+  - [Regression Test](#regression-test)
+  - [Session-Based Cart](#session-based-cart)
+- [License](#license)
+- [Support / Contact](#support--contact)
 * [Database Schema](#database-schema)
-* [Services](#services)
-* [Prerequisites](#prerequisites)
-* [Installation](#installation)
-* [Project Structure](#project-structure)
-* [Password Reset](#password-reset)
-* [Environment Variables](#environment-variables)
-* [Features](#features)
-* [Useful Commands](#useful-commands)
-* [Development](#development)
-* [Testing](#testing)
-* [Architecture](#architecture)
-* [Troubleshooting](#troubleshooting)
-* [Production Hardening](#production-hardening)
+
+- [Deployment](#deployment)
+    - [Production Deployment](#production-deployment)
+- [Known Issues](#known-issues)
+- [References and Definitions (Optional)](#references-and-definitions-optional)
+  - [Modular Monolith](#modular-monolith)
+  - [Data Integrity](#data-integrity)
+  - [Concurrency](#concurrency)
+  - [Regression Test](#regression-test)
+  - [Session-Based Cart](#session-based-cart)
+- [License](#license)
+- [Support / Contact](#support--contact)
+
+---
+
+# Overview
+
+## What is Charkhoneh?
+
+Charkhoneh is a Django-based **online shop** designed around a complete e-commerce workflow.
+
+The application provides the foundation for customers to:
+
+1. Register an account
+2. Verify their email address
+3. Log in
+4. Browse published products
+5. Add products to a session-based cart
+6. Modify cart quantities
+7. Proceed toward checkout
+8. Create an order
+9. Complete payment
+10. Receive order confirmation
+11. Manage their orders
+
+The project is currently focused on building and hardening the core platform before completing the remaining order, inventory, and payment components.
 
 ---
 
@@ -36,189 +122,458 @@ The schema represents the currently implemented application domain. Future domai
 
 ---
 
-## About
 
-CharkhoneApplication is a Django-based e-commerce application.
+## Target Users
 
-The project uses Docker Compose to provide a reproducible development environment with PostgreSQL, Django, and smtp4dev.
+The primary user is an online-shop customer who needs to:
 
-The application currently focuses on:
+* Create and manage an account
+* Browse available products
+* Maintain a shopping cart
+* Complete the purchasing process
+* Manage their orders
 
-* Custom email-based authentication
-* Email verification
-* Password reset
-* Product catalog
-* Product publishing
-* Shopping cart
-* AJAX cart quantity updates
-* Newsletter subscription and verification
-* REST API support
+The application also provides administrative foundations for managing products and related shop data.
+
+## Project Goal
+
+The goal is not only to build a functional e-commerce website, but to demonstrate practical software-engineering capabilities through:
+
+* Maintainable Django architecture
 * Database integrity
+* Secure authentication
 * Concurrency-safe operations
 * Automated testing
+* Containerized development
+* Clear separation of application responsibilities
+* Incremental implementation of a realistic product
 
-The project is being developed incrementally toward a complete e-commerce workflow:
+---
+
+# Product Snapshot
+
+| Item                     | Current State                                |
+| ------------------------ | -------------------------------------------- |
+| Product Type             | E-commerce / Online Shop                     |
+| Architecture             | Modular Monolith                             |
+| Backend                  | Django 5.2.16                                |
+| Database                 | PostgreSQL 15                                |
+| API                      | Django REST Framework                        |
+| Environment              | Docker / Docker Compose                      |
+| Email Development        | smtp4dev                                     |
+| Testing                  | pytest / pytest-django                       |
+| Authentication           | Custom email-based user model                |
+| Cart                     | Session-based                                |
+| Current Phase            | Core platform + security/integrity hardening |
+| Release Candidate Target | Friday, 13 November 2026                     |
+
+### Current Product State
+
+**Implemented**
+
+* Custom email-based authentication
+* User registration
+* Email verification
+* Login
+* Password reset
+* Password reset token expiration and single-use behavior
+* Password reset token hashing
+* Password reset rate limiting
+* Product catalog
+* Published/unpublished product handling
+* Product categories
+* Product images
+* Product pricing
+* Session-based shopping cart
+* Add/remove/update cart items
+* AJAX cart quantity updates
+* Newsletter subscription
+* Newsletter email verification
+* Newsletter delivery status tracking
+* Partial newsletter delivery handling
+* HTML sanitization
+* REST API foundation
+* Automated tests
+* Docker development environment
+* PostgreSQL integration
+* smtp4dev integration
+* Django Debug Toolbar
+* Regression tests for resolved bugs
+* Database integrity and concurrency hardening
+
+**In Progress / Planned**
+
+* Checkout workflow
+* Order creation
+* Inventory management
+* Payment integration
+* Order confirmation
+* Order management
+* Completion of the end-to-end purchasing flow
+
+---
+
+# Product Flow
+
+The intended end-to-end customer journey is:
 
 ```text
-Registration
-      ↓
-Email Verification
-      ↓
+Register
+   ↓
+Verify Email
+   ↓
 Login
-      ↓
-Product Catalog
-      ↓
-Shopping Cart
-      ↓
+   ↓
+Browse Products
+   ↓
+Add to Cart
+   ↓
+Update Cart
+   ↓
 Checkout
-      ↓
-Order
-      ↓
+   ↓
+Create Order
+   ↓
 Payment
-      ↓
+   ↓
+Confirmation
+   ↓
 Order Management
 ```
 
-The Checkout, Order, Inventory, and Payment stages are part of the ongoing development roadmap.
+### Current implementation status
 
----
-
-## Services
-
-| Service        | Version   | Ports     | Description              |
-| -------------- | --------- | --------- | ------------------------ |
-| **PostgreSQL** | 15-alpine | 5432      | Primary database         |
-| **Django**     | 5.2.16    | 8000      | Web application          |
-| **smtp4dev**   | v3        | 25 / 5000 | Development email server |
-
----
-
-## Prerequisites
-
-* [Docker](https://docs.docker.com/get-docker/) 20.10+
-* [Docker Compose](https://docs.docker.com/compose/install/) 2.0+
-* Git
-
-The recommended development workflow uses Docker Compose so that the required services can be started together.
-
----
-
-## Installation
-
-### 1. Clone the repository
-
-```bash
-git clone <repository-url>
-cd CharkhoneApplication-django
+```text
+Register              ✅
+Verify Email          ✅
+Login                 ✅
+Browse Products       ✅
+Add to Cart           ✅
+Update Cart           ✅
+Checkout              🚧
+Create Order          🚧
+Payment               🚧
+Confirmation          🚧
+Order Management      🚧
 ```
 
-### 2. Create the environment file
+The remaining purchasing stages are intentionally separated from the currently implemented catalog and cart functionality so that order, inventory, and payment logic can be introduced with appropriate transaction and integrity guarantees.
+
+---
+
+# Features
+
+## Authentication & Account Management
+
+* Custom email-based user authentication
+* Registration
+* Login
+* Email verification
+* Password reset
+* Expiring password reset tokens
+* Single-use password reset tokens
+* Password reset token hashing
+* Password validation
+* Password reset rate limiting
+* Secure authentication-related flows
+
+## Product Catalog
+
+* Product management
+* Product categories
+* Product images
+* Product pricing
+* Published/unpublished products
+* Prevention of unpublished products appearing in customer-facing queries
+
+## Shopping Cart
+
+* Session-based cart
+* Add products to cart
+* Remove products from cart
+* Update product quantities
+* AJAX quantity updates
+* Cart validation
+* Database-aware product handling
+
+## Newsletter
+
+* Newsletter subscription
+* Email verification
+* Delivery status tracking
+* Successful / failed / partially successful delivery states
+* HTML sanitization
+
+## API
+
+The project includes Django REST Framework as the foundation for exposing application functionality through APIs.
+
+The API layer is being developed alongside the web application rather than as a completely separate backend.
+
+## Testing
+
+The project uses automated testing to verify:
+
+* Authentication behavior
+* Password reset behavior
+* Cart behavior
+* Product visibility
+* Newsletter behavior
+* Security-related behavior
+* Concurrency-sensitive behavior
+* Regression cases
+
+---
+
+# Demo
+
+## Video Example
+
+> Add project demonstration video here.
+
+```text
+Coming soon
+```
+
+## Image Example
+
+> Add application screenshots here.
+
+```text
+Coming soon
+```
+
+---
+
+# Requirements
+
+The project currently uses:
+
+* Python 3.12+
+* Django 5.2.16
+* PostgreSQL 15
+* Docker
+* Docker Compose
+* Django REST Framework
+* pytest
+* pytest-django
+* smtp4dev
+
+For the recommended development workflow, Docker should be available on the host machine.
+
+---
+
+# Configuration
+
+Development configuration is stored separately from application source code.
+
+Example environment file:
+
+```text
+envs/dev/django/.env.sample
+```
+
+Create the development environment file from the sample:
 
 ```bash
 cp envs/dev/django/.env.sample envs/dev/django/.env
 ```
 
-Edit the environment file according to your local configuration.
+Then configure the required environment variables.
 
-Example:
+Typical configuration includes:
 
-```env
-DJANGO_SECRET_KEY="your-secret-key"
-DJANGO_DEBUG=True
-DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,[::1]
+* Django secret key
+* Debug configuration
+* Allowed hosts
+* Database connection
+* Email configuration
+* Application-specific settings
 
-POSTGRES_DB=postgres
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_HOST=db
-POSTGRES_PORT=5432
+Sensitive credentials should never be committed to the repository.
 
-TIME_ZONE=UTC
+---
+
+# Installation
+
+## 1. Clone the repository
+
+```bash
+git clone <repository-url>
+cd CharkhoneWebShop-DjangoApplication
 ```
 
-> **Warning:** Never use development credentials or a development secret key in production.
+## 2. Configure environment variables
 
-### 3. Build and start the project
+```bash
+cp envs/dev/django/.env.sample envs/dev/django/.env
+```
+
+Edit the `.env` file according to your local environment.
+
+## 3. Build and start the development environment
 
 ```bash
 docker compose up --build -d
 ```
 
-### 4. Apply migrations
+## 4. Check running containers
 
 ```bash
-docker exec -it charkhoneh-backend python manage.py migrate
+docker compose ps
 ```
 
-### 5. Create an admin user
+## 5. Apply migrations
 
 ```bash
-docker exec -it charkhoneh-backend python manage.py createsuperuser
+docker compose exec django python manage.py migrate
 ```
 
-### 6. Check the Django configuration
+## 6. Create a superuser
 
 ```bash
-docker exec -it charkhoneh-backend python manage.py check
+docker compose exec django python manage.py createsuperuser
 ```
 
-### 7. Access the services
-
-| Service      | URL                          |
-| ------------ | ---------------------------- |
-| Django       | http://localhost:8000        |
-| Django Admin | http://localhost:8000/admin/ |
-| smtp4dev     | http://localhost:5000        |
+The application can now be accessed through the configured development server.
 
 ---
 
-## Project Structure
+# Usage
+
+## Application
+
+Start the development environment:
+
+```bash
+docker compose up -d
+```
+
+Stop it:
+
+```bash
+docker compose down
+```
+
+Rebuild after dependency or Docker configuration changes:
+
+```bash
+docker compose up --build -d
+```
+
+## Django Management Commands
+
+Run Django commands inside the application container:
+
+```bash
+docker compose exec django python manage.py <command>
+```
+
+For example:
+
+```bash
+docker compose exec django python manage.py makemigrations
+docker compose exec django python manage.py migrate
+```
+
+---
+
+## Lint and Reformat + Pre-commit (Optional)
+
+Formatting, linting, and pre-commit tooling can be added to the development workflow as the project evolves.
+
+The current priority is application correctness, automated testing, database integrity, and maintainable implementation.
+
+---
+
+## Documentation
+
+Project documentation is maintained alongside the source code.
+
+The `docs/` directory is intended for documentation that is too detailed for the main README, including technical decisions, implementation notes, and engineering documentation.
+
+The README intentionally focuses on the product, architecture, current state, setup, and development workflow.
+
+---
+
+## Testing
+
+The project uses:
+
+* `pytest`
+* `pytest-django`
+
+Run the complete test suite with:
+
+```bash
+docker compose exec django pytest
+```
+
+For a specific test:
+
+```bash
+docker compose exec django pytest path/to/test_file.py
+```
+
+For verbose output:
+
+```bash
+docker compose exec django pytest -v
+```
+
+### Testing Philosophy
+
+Tests are treated as part of the implementation rather than as an afterthought.
+
+When a bug is fixed, the corresponding regression behavior should be covered by an automated test whenever practical.
+
+Particular attention is given to security-sensitive and concurrency-sensitive operations.
+
+---
+
+# Project Structure
+
+The project follows a Django modular-monolith structure:
 
 ```text
 CharkhoneApplication-django/
 │
+├── accounts/
+│   ├── migrations/
+│   ├── templates/
+│   ├── admin.py
+│   ├── forms.py
+│   ├── models.py
+│   ├── urls.py
+│   ├── views.py
+│   └── ...
+│
+├── cart/
+│   ├── migrations/
+│   ├── templates/
+│   ├── models.py
+│   ├── urls.py
+│   ├── views.py
+│   └── ...
+│
+├── shop/
+│   ├── migrations/
+│   ├── templates/
+│   ├── models.py
+│   ├── urls.py
+│   ├── views.py
+│   └── ...
+│
+├── website/
+│   ├── templates/
+│   ├── static/
+│   └── ...
+│
 ├── core/
-│   ├── core/                    # Django project configuration
-│   │   ├── settings.py
-│   │   ├── urls.py
-│   │   ├── asgi.py
-│   │   └── wsgi.py
-│   │
-│   ├── accounts/                # Authentication and user management
-│   │   ├── models.py
-│   │   ├── views.py
-│   │   ├── forms.py
-│   │   ├── serializers.py
-│   │   ├── urls.py
-│   │   ├── admin.py
-│   │   ├── management/
-│   │   │   └── commands/
-│   │   └── tests/
-│   │
-│   ├── shop/                    # Product catalog
-│   │   ├── models.py
-│   │   ├── views.py
-│   │   ├── urls.py
-│   │   ├── admin.py
-│   │   └── tests/
-│   │
-│   ├── cart/                    # Shopping cart
-│   │   ├── models.py
-│   │   ├── views.py
-│   │   ├── urls.py
-│   │   ├── services.py
-│   │   └── tests/
-│   │
-│   ├── website/                 # Public website
-│   │   ├── views.py
-│   │   ├── urls.py
-│   │   ├── models.py
-│   │   └── admin.py
-│   │
-│   ├── templates/               # Django templates
-│   ├── static/                  # Static source files
-│   ├── staticfiles/             # Collected static files
-│   └── manage.py
+│   ├── settings/
+│   ├── urls.py
+│   ├── asgi.py
+│   └── wsgi.py
 │
 ├── dockerfiles/
 │   └── dev/
@@ -229,671 +584,277 @@ CharkhoneApplication-django/
 │       └── django/
 │
 ├── postgres/
-│   └── data/                    # Local PostgreSQL data
 │
-├── docs/                        # Project documentation and diagrams
+├── docs/
+│
 ├── docker-compose.yml
 ├── pytest.ini
 ├── requirements.txt
-└── README.md
+├── README.md
+└── ...
 ```
 
-### Application Responsibilities
-
-| Application | Responsibility                                      |
-| ----------- | --------------------------------------------------- |
-| `accounts`  | Users, authentication, verification, password reset |
-| `shop`      | Products, categories, images and product visibility |
-| `cart`      | Shopping cart and cart operations                   |
-| `website`   | Public website and presentation layer               |
-| `core`      | Django project configuration                        |
+The exact structure may evolve as additional domain functionality such as orders, inventory, and payments is implemented.
 
 ---
 
-## Password Reset
+# Architecture
 
-Charkhoneh uses a custom password-reset flow based on Django's signing and hashing mechanisms.
+## Architectural Approach
 
-**It does not rely on JWT tokens for password reset.**
+Charkhoneh currently follows a **Modular Monolith** architecture.
 
-The flow is designed around:
+The application is deployed as a single Django application while domain responsibilities are separated into Django apps.
 
-* Expiring reset tokens
+```text
+                    ┌─────────────────────┐
+                    │      Client         │
+                    │  Browser / API      │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │       Django        │
+                    │   Application       │
+                    └──────────┬──────────┘
+                               │
+              ┌────────────────┼────────────────┐
+              │                │                │
+              ▼                ▼                ▼
+        ┌──────────┐     ┌──────────┐     ┌──────────┐
+        │ Accounts │     │   Shop   │     │   Cart   │
+        └──────────┘     └──────────┘     └──────────┘
+              │                │                │
+              └────────────────┼────────────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │    PostgreSQL       │
+                    └─────────────────────┘
+```
+
+### Why a Modular Monolith?
+
+The project does not currently require the operational and architectural complexity of microservices.
+
+A modular monolith provides:
+
+* Clear domain boundaries
+* Simpler deployment
+* Easier local development
+* Straightforward transactions
+* Lower infrastructure complexity
+* A foundation that can evolve as product requirements grow
+
+The architecture can be decomposed further if future requirements justify it.
+
+---
+
+# Engineering Highlights
+
+The project emphasizes engineering correctness in addition to feature development.
+
+## Database Integrity
+
+Database-level constraints and application-level validation are used together where appropriate.
+
+The goal is to prevent invalid states rather than relying exclusively on application code.
+
+## Concurrency Safety
+
+Concurrency-sensitive operations are designed to avoid race conditions.
+
+For example, password reset token consumption is protected so that the same single-use token cannot be successfully consumed by multiple concurrent requests.
+
+## Security
+
+Security-related work includes:
+
+* Password validation
+* Secure password reset flow
+* Token expiration
 * Single-use tokens
-* Hashed token storage
-* Atomic token consumption
-* Concurrency protection
+* Token hashing
 * Rate limiting
-* Password validation
-* Email-enumeration protection
-
-### How it works
-
-```text
-User
- │
- │ Request password reset
- ▼
-Django
- │
- ├── Validate request
- │
- ├── Create secure token
- │
- ├── Store token hash
- │
- └── Send reset email
-          │
-          ▼
-       smtp4dev
-```
-
-When the user submits the reset token:
-
-```text
-Reset Request
-      │
-      ▼
-Validate Token
-      │
-      ├── Invalid / Expired → Reject
-      │
-      ▼
-Atomically Claim Token
-      │
-      ├── Already Used → Reject
-      │
-      ▼
-Validate New Password
-      │
-      ▼
-Update Password
-      │
-      ▼
-Invalidate Token
-```
-
-### Security Properties
-
-* **Expiration:** Reset tokens have a limited lifetime.
-* **Single-use:** A successfully consumed token cannot be reused.
-* **Hashing:** Stored token values are protected rather than keeping the raw token.
-* **Concurrency protection:** Token consumption is protected against concurrent requests.
-* **Rate limiting:** Password reset requests are rate-limited.
-* **Password validation:** New passwords are checked against Django password validators.
-* **Email enumeration protection:** Reset requests use a non-revealing response.
-* **Atomic operations:** Token state changes are handled transactionally.
-
-### Password Reset API
-
-| Endpoint                    | Method | Description                        |
-| --------------------------- | ------ | ---------------------------------- |
-| `/accounts/request-reset/`  | POST   | Request a password reset           |
-| `/accounts/reset-password/` | POST   | Reset password using a valid token |
-
-Example request:
-
-```bash
-curl -X POST http://localhost:8000/accounts/request-reset/ \
-  -H "Content-Type: application/json" \
-  -d '{"email": "user@example.com"}'
-```
-
-Example response:
-
-```json
-{
-  "message": "در صورت وجود ایمیل، لینک بازیابی ارسال شد."
-}
-```
-
-### Cleanup Command
-
-Expired password-reset tokens can be cleaned up using:
-
-```bash
-docker exec -it charkhoneh-backend \
-python manage.py cleanup_expired_tokens
-```
-
----
-
-## Environment Variables
-
-### Django
-
-| Variable               | Description                   |
-| ---------------------- | ----------------------------- |
-| `DJANGO_SECRET_KEY`    | Django secret key             |
-| `DJANGO_DEBUG`         | Enables Django debug mode     |
-| `DJANGO_ALLOWED_HOSTS` | Comma-separated allowed hosts |
-
-### PostgreSQL
-
-| Variable            | Description               |
-| ------------------- | ------------------------- |
-| `POSTGRES_DB`       | Database name             |
-| `POSTGRES_USER`     | Database user             |
-| `POSTGRES_PASSWORD` | Database password         |
-| `POSTGRES_HOST`     | PostgreSQL Docker service |
-| `POSTGRES_PORT`     | PostgreSQL port           |
-
-### Other
-
-| Variable    | Description          |
-| ----------- | -------------------- |
-| `TIME_ZONE` | Application timezone |
-
-Environment configuration should be kept outside the source code.
-
----
-
-## Features
-
-### Authentication
-
-* Custom email-based user authentication
-* User registration
-* Email verification
-* Login/logout
-* Password validation
-* Password reset
-* Expiring reset tokens
-* Single-use reset tokens
-* Password reset rate limiting
-* Email enumeration protection
-
-### Product Catalog
-
-* Product listing
-* Product detail pages
-* Categories
-* Product images
-* Product pricing
-* Published/unpublished products
+* HTML sanitization
 * Protection against exposing unpublished products
 
-### Shopping Cart
+## Regression Testing
 
-* Session-based shopping cart
-* Add products
-* Remove products
-* Update quantities
-* AJAX quantity updates
-* Cart validation
-* Cart-related regression tests
-
-### Newsletter
-
-* Newsletter subscription
-* Email verification
-* Verification token handling
-* Delivery status tracking
-* Partial delivery handling
-* HTML sanitization
-
-### API
-
-* Django REST Framework
-* API serializers
-* API validation
-* Authentication and permission handling
-
-### Database and Reliability
-
-* PostgreSQL
-* Database constraints
-* Transactions
-* Row-level locking where required
-* Concurrency-safe operations
-* Regression tests for previously fixed bugs
-
-### Development Tools
-
-* Docker Compose
-* smtp4dev
-* Django Debug Toolbar
-* pytest
-* pytest-django
+Important bugs are converted into regression tests so that previously resolved problems are less likely to return.
 
 ---
 
-## Django Debug Toolbar
+# ERD / Database Schema
 
-Django Debug Toolbar is available during development.
+The following schema represents the **currently implemented domain**, not the final planned e-commerce model.
 
-When:
+Order, inventory, and payment entities are intentionally excluded because they have not yet been implemented.
 
-```env
-DJANGO_DEBUG=True
+```text
+┌──────────────────────┐
+│        User          │
+├──────────────────────┤
+│ id                   │
+│ email                │
+│ password             │
+│ is_active            │
+│ ...                  │
+└──────────┬───────────┘
+           │
+           │
+           ├──────────────────────┐
+           │                      │
+           ▼                      ▼
+┌──────────────────────┐   ┌──────────────────────┐
+│ Email Verification   │   │ Password Reset       │
+│ / Verification Data  │   │ Token Data           │
+└──────────────────────┘   └──────────────────────┘
+
+
+┌──────────────────────┐
+│       Category       │
+├──────────────────────┤
+│ id                   │
+│ name                 │
+│ ...                  │
+└──────────┬───────────┘
+           │
+           │ 1:N
+           ▼
+┌──────────────────────┐
+│       Product        │
+├──────────────────────┤
+│ id                   │
+│ category             │
+│ name                 │
+│ price                │
+│ published            │
+│ ...                  │
+└──────────┬───────────┘
+           │
+           │
+           ▼
+┌──────────────────────┐
+│    Product Image     │
+├──────────────────────┤
+│ id                   │
+│ product              │
+│ image                │
+│ ...                  │
+└──────────────────────┘
+
+
+┌──────────────────────┐
+│   Session Cart       │
+│   / Cart Data        │
+├──────────────────────┤
+│ product reference    │
+│ quantity             │
+└──────────────────────┘
+
+
+┌──────────────────────┐
+│ Newsletter Subscriber│
+├──────────────────────┤
+│ id                   │
+│ email                │
+│ verification state   │
+│ delivery status      │
+│ ...                  │
+└──────────────────────┘
 ```
 
-the toolbar can be used to inspect:
+The ERD will be expanded when the Order, Inventory, and Payment domains are implemented.
 
-* SQL queries
-* Query execution time
-* Requests and responses
-* Templates
-* Static files
-* Cache usage
-* Django settings
+---
+
+# Deployment
+
+The project currently provides a Docker-based development environment.
+
+Development services include:
+
+```text
+Django
+   │
+   ├── PostgreSQL 15
+   │
+   └── smtp4dev
+```
+
+### Production Deployment
+
+Production deployment is not yet considered the final stage of the project.
+
+Before production deployment, the application should be hardened around areas such as:
+
+* Production settings
+* Secret management
+* HTTPS
+* Secure cookies
+* Database backups
+* Static/media file serving
 * Logging
+* Monitoring
+* Error reporting
+* Email provider configuration
+* Database connection management
+* Container and infrastructure configuration
 
-> **Warning:** Debug mode and Django Debug Toolbar must not be enabled in a production environment.
-
----
-
-## Useful Commands
-
-### Docker
-
-```bash
-# Start services
-docker compose up
-
-# Start in background
-docker compose up -d
-
-# Rebuild and start
-docker compose up --build -d
-
-# Stop services
-docker compose down
-
-# View logs
-docker compose logs -f
-
-# View backend logs
-docker compose logs -f backend
-
-# Check running services
-docker compose ps
-```
-
-### Django Management
-
-```bash
-# Run Django management command
-docker exec -it charkhoneh-backend python manage.py <command>
-
-# Create superuser
-docker exec -it charkhoneh-backend python manage.py createsuperuser
-
-# Apply migrations
-docker exec -it charkhoneh-backend python manage.py migrate
-
-# Create migrations
-docker exec -it charkhoneh-backend python manage.py makemigrations
-
-# Collect static files
-docker exec -it charkhoneh-backend python manage.py collectstatic
-
-# Django system checks
-docker exec -it charkhoneh-backend python manage.py check
-
-# Django shell
-docker exec -it charkhoneh-backend python manage.py shell
-
-# Cleanup expired password reset tokens
-docker exec -it charkhoneh-backend python manage.py cleanup_expired_tokens
-```
-
-### Testing
-
-```bash
-# Run the complete pytest suite
-docker exec -it charkhoneh-backend pytest
-
-# Run with verbose output
-docker exec -it charkhoneh-backend pytest -v
-
-# Run a specific test
-docker exec -it charkhoneh-backend pytest path/to/test_file.py
-```
-
-### Database
-
-```bash
-docker exec -it charkhoneh-db psql -U postgres
-```
+The current Docker configuration is primarily intended for development and local engineering workflows.
 
 ---
 
-## Development
+# Known Issues
 
-### Static Path Converter
-
-The `convert_static.py` utility converts hardcoded static paths in templates into Django static template tags.
-
-Example:
-
-```bash
-python convert_static.py --dir core/templates
-```
-
-Preview changes without modifying files:
-
-```bash
-python convert_static.py --dir core/templates --dry-run
-```
-
-Create backups before modifying files:
-
-```bash
-python convert_static.py --dir core/templates --backup
-```
-
-### smtp4dev
-
-smtp4dev captures outgoing emails during development.
-
-* Web interface: `http://localhost:5000`
-* SMTP server: `localhost:25`
-
-Django can use smtp4dev with:
-
-```python
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp4dev"
-EMAIL_PORT = 25
-EMAIL_USE_TLS = False
-```
-
-### Persian Fonts
-
-The project includes Persian font resources for the website interface.
-
----
-
-## Testing
-
-The project uses `pytest` and `pytest-django`.
-
-Run the full test suite:
-
-```bash
-docker exec -it charkhoneh-backend pytest
-```
-
-The test suite is intended to cover both normal application behavior and failure-sensitive cases.
-
-Important test areas include:
-
-* Authentication
-* Registration
-* Email verification
-* Password reset
-* Password validation
-* Token expiration
-* Token single-use behavior
-* Password reset concurrency
-* Product visibility
-* Product catalog behavior
-* Shopping cart operations
-* AJAX cart operations
-* Newsletter verification
-* Email delivery failures
-* Database integrity
-* Regression scenarios
-
-### Why concurrency tests matter
-
-Some operations cannot be validated correctly using only sequential tests.
-
-For example, password-reset token consumption must remain correct when two requests attempt to consume the same token concurrently.
-
-The expected behavior is:
-
-```text
-Request A ──► Token ──► SUCCESS
-Request B ──► Same Token ──► REJECTED
-```
-
-rather than allowing both requests to successfully consume the same token.
-
----
-
-## Architecture
-
-Charkhoneh currently follows a **modular monolith** architecture.
-
-The application remains a single Django deployment while separating responsibilities into Django applications.
-
-```text
-                         Client
-                           │
-                           ▼
-                     Django Application
-                           │
-          ┌────────────────┼────────────────┐
-          │                │                │
-          ▼                ▼                ▼
-      accounts           shop             cart
-          │                │                │
-          └────────────────┼────────────────┘
-                           │
-                           ▼
-                       PostgreSQL
-                           │
-                           ▼
-                        smtp4dev
-```
-
-### Why Modular Monolith?
-
-At the current project scale, a modular monolith provides:
-
-* Clear application boundaries
-* Simpler deployment
-* Lower operational complexity
-* Easier local development
-* Straightforward database transactions
-* Room for future architectural evolution
-
-Microservices are intentionally not introduced at this stage.
-
----
-
-## Data Integrity and Concurrency
-
-The project treats application-level validation and database-level integrity as separate responsibilities.
-
-Where appropriate, critical operations use:
-
-* `transaction.atomic()`
-* `select_for_update()`
-* Database constraints
-* Unique constraints
-* Explicit state transitions
-
-This is particularly important for operations such as:
-
-* Password reset token consumption
-* Email verification token handling
-* Cart data integrity
-* Unique product slugs
-* Concurrent requests affecting the same database records
-
----
-
-## Entity Relationship Diagram
-
-The current ERD represents implemented models only.
-
-```text
-User
- │
- ├──────────────► Email Verification
- │
- ├──────────────► Password Reset Token
- │
- └──────────────► Cart
-                       │
-                       └──────────────► Product
-                                            │
-                                            └──────────────► Category
-```
-
-The complete visual diagram is available at:
-
-```text
-docs/db-diagram.png
-```
-
-Future Order, Inventory, and Payment relationships should only be added to the ERD after their corresponding models are implemented.
-
----
-
-## Troubleshooting
-
-### Database Connection Error
-
-Check the running services:
-
-```bash
-docker compose ps
-```
-
-Check PostgreSQL logs:
-
-```bash
-docker compose logs db
-```
-
-### Backend Logs
-
-```bash
-docker compose logs -f backend
-```
-
-### Port Already in Use
-
-If port `8000` is already occupied, change the host-side port mapping in `docker-compose.yml`.
-
-For example:
-
-```yaml
-ports:
-  - "8001:8000"
-```
-
-The application will then be available at:
-
-```text
-http://localhost:8001
-```
-
-### Reset the Development Database
-
-> **Warning:** This removes the development database data.
-
-```bash
-docker compose down -v
-rm -rf postgres/data/*
-docker compose up --build -d
-```
-
-After resetting the database:
-
-```bash
-docker exec -it charkhoneh-backend python manage.py migrate
-```
-
----
-
-# Production Hardening
-
-The project has undergone a series of security, integrity, concurrency, and testing improvements.
-
-## Completed Engineering Improvements
-
-### Security
-
-* Protected production configuration from missing `SECRET_KEY`.
-* Added email enumeration protection.
-* Improved token invalidation.
-* Added token expiration handling.
-* Added password validation.
-* Added password reset rate limiting.
-* Reduced unsafe exception handling.
-* Protected sensitive token operations.
-
-### Authentication and Verification
-
-* Custom email-based user authentication.
-* Email verification workflow.
-* Expiring verification tokens.
-* Single-use token behavior.
-* Password reset with secure token handling.
-* Concurrency protection for password-reset token consumption.
-
-### Database Integrity
-
-* Unique constraints for important identifiers.
-* Transactional token operations.
-* Row-level locking for concurrency-sensitive operations.
-* Product publication filtering.
-* Protection against invalid application states.
-
-### Cart
-
-* Session-based cart implementation.
-* Cart quantity management.
-* AJAX quantity updates.
-* Validation of cart product state.
-* Regression coverage for cart-related bugs.
-
-### Newsletter
-
-* Email verification.
-* Delivery state tracking.
-* Partial delivery handling.
-* HTML sanitization.
-* Failure-aware email processing.
-
-### Testing
-
-The project now uses pytest/pytest-django for automated testing.
-
-Testing has been expanded beyond simple happy-path tests to include:
-
-* Regression tests
-* Security-sensitive cases
-* Failure scenarios
-* Database integrity
-* Concurrency behavior
-
----
-
-## Current Development Roadmap
-
-The project is being developed incrementally.
-
-### Implemented
-
-* Authentication
-* Registration
-* Email verification
-* Password reset
-* Product catalog
-* Product visibility
-* Shopping cart
-* AJAX cart updates
-* Newsletter
-* REST API foundation
-* Automated tests
-* Docker development environment
-* PostgreSQL
-* Concurrency and integrity improvements
-
-### In Progress / Planned
+The following major product areas are not yet complete:
 
 * Checkout
 * Order creation
 * Inventory management
 * Payment integration
-* Payment state management
+* Order confirmation
 * Order management
-* Complete end-to-end purchase flow
 
-The README intentionally distinguishes implemented functionality from future functionality so that the documentation reflects the actual state of the application.
+These are part of the remaining product roadmap and should not be considered implemented functionality.
+
+Minor bugs and regressions are tracked and resolved through the project's engineering workflow.
+
+---
+
+# References and Definitions (Optional)
+
+## Modular Monolith
+
+A single deployable application divided internally into clearly defined modules or domains.
+
+## Data Integrity
+
+The use of constraints, validation, transactions, and correct application behavior to prevent invalid database states.
+
+## Concurrency
+
+The behavior of the application when multiple requests attempt to modify or consume the same resource at approximately the same time.
+
+## Regression Test
+
+An automated test that verifies a previously fixed bug does not return.
+
+## Session-Based Cart
+
+A shopping cart whose current state is associated with the user's session rather than requiring a persistent order record.
+
+---
+
+# License
+
+This project is intended as a software-engineering portfolio project.
+
+Add the repository's applicable license here when the project's licensing decision is finalized.
+
+---
+
+# Support / Contact
+
+For questions, feedback, or collaboration related to the project, use the repository's issue tracker or contact the project owner through the associated repository profile.
