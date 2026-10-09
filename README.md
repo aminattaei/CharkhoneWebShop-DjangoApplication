@@ -587,6 +587,7 @@ CharkhoneApplication-django/
 │
 ├── docs/
 │
+├── docs/                        # Project documentation and diagrams
 ├── docker-compose.yml
 ├── pytest.ini
 ├── requirements.txt
