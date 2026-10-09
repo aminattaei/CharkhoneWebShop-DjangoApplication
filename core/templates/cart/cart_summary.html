@@ -243,7 +243,7 @@
 
 <script>
     $(function () {
-        const csrfToken = $('meta[name="csrf-token"]').attr('content') || '';
+        const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
         function updateCartTotals(data) {
             $('#cart-total-items').text(data.total_items + ' مورد');
@@ -256,50 +256,83 @@
             alert(message || 'خطا در بروزرسانی سبد خرید.');
         }
 
+        $('.product-quantity').each(function () {
+            $(this).data('previous-value', $(this).val());
+        });
+
         $('.product-quantity').on('change', function () {
             const select = $(this);
             const productId = select.data('product-id');
-            const quantity = parseInt(select.val(), 10);
+            const quantity = Number(select.val());
+            const previousValue = select.data('previous-value');
 
-            if (!productId || isNaN(quantity) || quantity < 1) {
+            if (
+                !productId ||
+                !Number.isInteger(quantity) ||
+                quantity < 1
+            ) {
                 showError('تعداد نامعتبر است.');
+                select.val(previousValue);
                 return;
             }
 
             if (select.data('request-in-flight')) {
+                select.val(previousValue);
                 return;
             }
+
+            if (!csrfToken) {
+                showError('CSRF Token پیدا نشد. تنظیمات قالب را بررسی کنید.');
+                select.val(previousValue);
+                return;
+            }
+
+            const wasDisabled = select.prop('disabled');
+
             select.data('request-in-flight', true);
+            select.prop('disabled', true);
 
             $.ajax({
                 url: "{% url 'cart:update_quantity' %}",
                 method: 'POST',
                 contentType: 'application/json',
-                headers: { 'X-CSRFToken': csrfToken },
-                data: JSON.stringify({ product_id: productId, quantity: quantity }),
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                data: JSON.stringify({
+                    product_id: productId,
+                    quantity: quantity
+                }),
                 dataType: 'json',
+
                 success: function (data) {
                     if (data.success) {
                         updateCartTotals(data);
+
+                        select.data('previous-value', select.val());
                     } else {
-                        showError(data.message || 'خطا در بروزرسانی سبد خرید.');
-                        select.val(select.data('previous-value'));
+                        showError(
+                            data.message || 'خطا در بروزرسانی سبد خرید.'
+                        );
+
+                        select.val(previousValue);
                     }
                 },
+
                 error: function (xhr) {
-                    const message = (xhr.responseJSON && xhr.responseJSON.message)
-                        || ('HTTP ' + xhr.status);
+                    const message =
+                        (xhr.responseJSON && xhr.responseJSON.message) ||
+                        ('HTTP ' + xhr.status);
+
                     showError(message);
-                    select.val(select.data('previous-value'));
+                    select.val(previousValue);
                 },
+
                 complete: function () {
                     select.data('request-in-flight', false);
+                    select.prop('disabled', wasDisabled);
                 }
             });
-        });
-
-        $('.product-quantity').each(function () {
-            $(this).data('previous-value', $(this).val());
         });
     });
 </script>
