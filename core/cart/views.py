@@ -110,3 +110,4 @@ def update_quantity(request):
             "success": False,
             "message": "اطلاعات ارسال‌شده نامعتبر است."
         }, status=400)
+

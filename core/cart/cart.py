@@ -67,6 +67,9 @@ class CartSession:
     def get_cart_dict(self):
         return self._cart
 
+    def __len__(self):
+        return len(self._cart['items'])
+
     def update_quantity(self, product_id, quantity):
         product_id = self._normalize_product_id(product_id)
         quantity = self._validate_quantity(quantity)
